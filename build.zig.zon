@@ -1,0 +1,19 @@
+.{
+    .name = "supermd",
+    .version = "0.0.0",
+    .dependencies = .{
+        .gfm = .{
+            .url = "git+https://github.com/kristoff-it/cmark-gfm.git#b7034624e7da6857a26e4720cd7fde26d5bc715c",
+            .hash = "122018a99dd8299e00d6b3279fc5fee9f93fd4c773db34f6390fcbed320cf4d652c1",
+        },
+        .scripty = .{
+            .url = "git+https://github.com/kristoff-it/scripty#df8c11380f9e9bec34809f2242fb116d27cf39d6",
+            .hash = "122014e78d7c69d93595993b3231f3141368e22634b332b0b91a2fb73a8570f147a5",
+        },
+        .superhtml = .{
+            .url = "git+https://github.com/kristoff-it/superhtml#85a2c6116cc17a00bb7ecdd3e2d6ae84fa5530c4",
+            .hash = "1220dacd73752dd1a1950bbc8866036f8e06c69eb404cd033b04e2fad85d8cb115f1",
+        },
+    },
+    .paths = .{"."},
+}
