@@ -19,6 +19,15 @@ pub fn build(b: *std.Build) !void {
     supermd.linkLibrary(gfm.artifact("cmark-gfm"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
 
+    const docgen = b.addExecutable(.{
+        .name = "docgen",
+        .root_source_file = b.path("src/docgen.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(docgen);
+
     // const ziggy = b.dependency("ziggy", .{ .target = target, .optimize = optimize });
     // supermd.addImport("ziggy", ziggy.module("ziggy"));
 
