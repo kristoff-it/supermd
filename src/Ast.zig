@@ -225,11 +225,23 @@ const Parser = struct {
         var current = start;
         while (current) |n| {
             const kind = n.nodeType();
-            if (kind == .IMAGE or kind == .LINK) {
-                current = n.next(stop);
-            } else {
-                current = n.nextSibling();
+            switch (kind) {
+                .BLOCK_QUOTE,
+                .LIST,
+                .ITEM,
+                .CODE_BLOCK,
+                .HTML_BLOCK,
+                .CUSTOM_BLOCK,
+                .PARAGRAPH,
+                .HEADING,
+                => {
+                    current = n.nextSibling();
+                },
+                else => {
+                    current = n.next(stop);
+                },
             }
+
             switch (kind) {
                 .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
                 .LIST => try p.analyzeList(n),
