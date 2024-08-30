@@ -35,6 +35,7 @@ pub const Error = struct {
         must_have_id,
         invalid_ref,
 
+        no_alt_in_links,
         expression_in_image_syntax,
         empty_expression,
 
@@ -263,6 +264,7 @@ const Parser = struct {
                                 .kind = .{
                                     .image = .{
                                         .src = .{ .site_asset = src[1..] },
+                                        .alt = n.title(),
                                     },
                                 },
                             };
@@ -286,6 +288,7 @@ const Parser = struct {
                                     .kind = .{
                                         .image = .{
                                             .src = .{ .url = src },
+                                            .alt = n.title(),
                                         },
                                     },
                                 };
@@ -295,9 +298,8 @@ const Parser = struct {
                             var d: Directive = .{
                                 .kind = .{
                                     .image = .{
-                                        .src = .{
-                                            .page_asset = src,
-                                        },
+                                        .src = .{ .page_asset = src },
+                                        .alt = n.title(),
                                     },
                                 },
                             };
@@ -355,6 +357,9 @@ const Parser = struct {
         if (src.len == 0) {
             try p.addError(n.range(), .empty_expression);
             return null;
+        }
+        if (n.title().?.len > 0) {
+            try p.addError(n.range(), .no_alt_in_links);
         }
         switch (src[0]) {
             '$' => {},
