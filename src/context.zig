@@ -112,6 +112,8 @@ pub const Value = union(enum) {
 pub const Directive = struct {
     id: ?[]const u8 = null,
     attrs: ?[][]const u8 = null,
+    title: ?[]const u8 = null,
+
     kind: Kind,
 
     pub const Kind = union(enum) {
@@ -160,20 +162,8 @@ pub const Directive = struct {
     pub const fallbackCall = utils.directiveCall;
     pub const PassByRef = true;
     pub const description =
-        \\Each directive's functions will allow you to set the directive's 
-        \\internal fields accordingly using a "builder pattern" / "fluent interface".
-        \\
-        \\For example, in:
-        \\
-        \\```markdown
-        \\[]($image.asset('cat.jpg').id('meow'))
-        \\```
-        \\The call to `asset` returns a reference to the original
-        \\`$image` directive, which in turn then gets modified a 
-        \\second time by `id`.
-        \\
-        \\Different kinds of directives will have different functions 
-        \\but all will support the functions listed here.
+        \\Each Directive has a different set of properties that can be set.
+        \\Properties that can be set on all directives are listed here.
     ;
     pub const Builtins = struct {
         pub const id = struct {
@@ -241,6 +231,37 @@ pub const Directive = struct {
                 return .{ .directive = self };
             }
         };
+        pub const title = struct {
+            pub const signature: Signature = .{
+                .params = &.{.str},
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\Title for this directive, mostly used as metadata that does
+                \\not get rendered directly in the page.
+            ;
+            pub fn call(
+                self: *Directive,
+                _: Allocator,
+                args: []const Value,
+            ) !Value {
+                const bad_arg = .{
+                    .err = "expected 1 string argument",
+                };
+                if (args.len != 1) return bad_arg;
+
+                const value = switch (args[0]) {
+                    .string => |s| s,
+                    else => return bad_arg,
+                };
+
+                if (self.title != null) return .{ .err = "field already set" };
+
+                self.title = value;
+
+                return .{ .directive = self };
+            }
+        };
     };
 };
 
@@ -304,6 +325,16 @@ pub const Heading = struct {
     pub const Builtins = struct {};
     pub const description =
         \\Allows giving an id and attributes to a heading element.
+        \\
+        \\Example:
+        \\```markdown
+        \\# [Title]($heading.id('foo').attrs('bar', 'baz'))
+        \\```
+        \\
+        \\This will be rendered by SuperHTML as:
+        \\```html
+        \\<h1 id="foo" class="bar baz">Title</h1>
+        \\```
     ;
 
     pub fn validate(_: Allocator, _: *Directive, ctx: Node) !?Value {
@@ -325,31 +356,59 @@ pub const Block = struct {
     pub const Builtins = struct {};
     pub const description =
         \\When placed at the beginning of a Markdown quote block, the quote 
-        \\block becomes a generic container for elements that can be styled as 
-        \\one wishes.
+        \\block becomes a styleable container for elements.
         \\
         \\SuperHTML will automatically give the class `block` when rendering 
         \\Block directives.
         \\
-        \\Syntax Example:
+        \\Example:
         \\```markdown
-        \\>[]($block.attr('note'))
-        \\>This is now a block note.
+        \\>[]($block)
+        \\>This is now a block.
         \\>Lorem ipsum.
         \\```
+        \\
+        \\>[]($block)
+        \\>This is now a block.
+        \\>Lorem ipsum.
+        \\
         \\Differently from Sections, Blocks cannot be rendered independently 
         \\and can be nested.
+        \\
+        \\Example:
+        \\```markdown
+        \\>[]($block)
+        \\>This is now a block.
+        \\>
+        \\>>[]($block.attrs('padded'))
+        \\>>This is a nested block.
+        \\>>
+        \\>
+        \\>back to the outer block
+        \\```
+        \\
+        \\>[]($block)
+        \\>This is now a block.
+        \\>
+        \\>>[]($block.attrs('padded'))
+        \\>>This is a nested block.
+        \\>
+        \\>back to the outer block
         \\
         \\A block can optionally wrap a Markdown heading element. In this case  
         \\the generated Block will be rendered with two separate sub-containers: 
         \\one for the block title and one for the body.
         \\
-        \\Syntax Example:
+        \\Example:
         \\```markdown
-        \\>### [Warning]($block.attr('warning'))
+        \\># [Warning]($block.attrs('warning'))
         \\>This is now a block note.
         \\>Lorem ipsum.
         \\```
+        \\># [Warning]($block.attrs('warning'))
+        \\>This is now a block note.
+        \\>Lorem ipsum.
+        \\
     ;
 
     pub fn validate(gpa: Allocator, _: *Directive, ctx: Node) !?Value {
@@ -390,21 +449,24 @@ pub const Block = struct {
 pub const Image = struct {
     alt: ?[]const u8 = null,
     src: ?Src = null,
-    caption: ?[]const u8 = null,
     linked: ?bool = null,
 
     pub const mandatory = .{.src};
     pub const directive_mandatory = .{};
     pub const description =
         \\An embedded image.
+        \\
+        \\Any text placed between `[]` will be used as a caption for the image.
+        \\
+        \\Example:
+        \\```markdown
+        \\[This is the caption]($image.asset('foo.jpg'))
+        \\```
     ;
     pub const Builtins = struct {
         pub const alt = utils.directiveBuiltin("alt", .string,
             \\An alternative description for this image that accessibility
             \\tooling can access.
-        );
-        pub const caption = utils.directiveBuiltin("caption", .string,
-            \\A caption for this image.
         );
         pub const linked = utils.directiveBuiltin("linked", .bool,
             \\Wraps the image in a link to itself.
@@ -429,6 +491,13 @@ pub const Video = struct {
     pub const directive_mandatory = .{};
     pub const description =
         \\An embedded video.
+        \\
+        \\Any text placed between `[]` will be used as a caption for the video.
+        \\
+        \\Example:
+        \\```markdown
+        \\[This is the caption]($video.asset('foo.webm'))
+        \\```
     ;
     pub const Builtins = struct {
         pub const loop = utils.directiveBuiltin("loop", .bool,
@@ -536,6 +605,13 @@ pub const Code = struct {
     pub const directive_mandatory = .{};
     pub const description =
         \\An embedded piece of code.
+        \\
+        \\Any text placed between `[]` will be used as a caption for the snippet.
+        \\
+        \\Example:
+        \\```markdown
+        \\[This is the caption]($code.asset('foo.zig'))
+        \\```
     ;
     pub const Builtins = struct {
         pub const asset = utils.SrcBuiltins.asset;
