@@ -337,7 +337,7 @@ pub const SrcBuiltins = struct {
             \\Same as `page()`, but the reference is relative to the section
             \\the current page belongs to.
             \\
-            \\># [NOTE]($block)
+            \\># [NOTE]($block.attrs('note'))
             \\>While section pages define a section, *as pages* they don't
             \\>belong to the section they define.
         ;
