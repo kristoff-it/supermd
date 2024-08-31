@@ -279,8 +279,18 @@ pub const Section = struct {
         // A section must be placed either:
         switch (parent.nodeType()) {
             // - at the top level without any embedded text
-            .DOCUMENT => if (ctx.firstChild() != null) return .{
-                .err = "top-level section definitions cannot embed any text",
+            //   (because of how md works, it will be inside of a paragraph)
+            .PARAGRAPH => {
+                if (ctx.firstChild() != null) return .{
+                    .err = "top-level section definitions cannot embed any text",
+                };
+
+                const not_first = parent.firstChild().?.n != ctx.n;
+                const not_top_level = parent.parent().?.nodeType() != .DOCUMENT;
+
+                if (not_first or not_top_level) return .{
+                    .err = "sections must be top level elements or be embedded in headings",
+                };
             },
             // - In a heading not embedded in other blocks
             .HEADING => {

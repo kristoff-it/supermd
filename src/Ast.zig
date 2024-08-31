@@ -312,33 +312,8 @@ const Parser = struct {
                     const directive = try p.runScript(n, src) orelse return;
                     switch (directive.kind) {
                         else => continue,
-                        .heading => {
-                            try p.addError(n.range(), .must_be_first_under_heading);
-                            continue;
-                        },
                         .section => {
-                            // A section directive must be the first element in a
-                            // markdown paragraph.
-                            if (n.prevSibling()) |prev| {
-                                _ = prev;
-                                try p.addError(n.range(), .nested_section_directive);
-                                continue;
-                            }
-
-                            // Must not have text inside of it
-                            if (n.firstChild()) |child| {
-                                try p.addError(
-                                    child.range(),
-                                    .section_must_not_have_text,
-                                );
-                            }
-
                             const parent = n.parent().?;
-                            if (parent.nodeType() != .PARAGRAPH) {
-                                try p.addError(n.range(), .nested_section_directive);
-                                continue;
-                            }
-
                             _ = try parent.setDirective(p.gpa, directive, false);
 
                             if (directive.id) |id| {
