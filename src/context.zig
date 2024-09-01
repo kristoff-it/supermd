@@ -286,10 +286,11 @@ pub const Section = struct {
                 };
 
                 const not_first = parent.firstChild().?.n != ctx.n;
+
                 const not_top_level = if (parent.parent()) |gp|
                     gp.nodeType() != .DOCUMENT
                 else
-                    true;
+                    false;
 
                 if (not_first or not_top_level) return .{
                     .err = "sections must be top level elements or be embedded in headings",
