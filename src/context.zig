@@ -1,5 +1,6 @@
 const std = @import("std");
 const scripty = @import("scripty");
+const ziggy = @import("ziggy");
 const utils = @import("context/utils.zig");
 const Node = @import("Node.zig");
 const Signature = @import("doctypes.zig").Signature;
@@ -113,9 +114,11 @@ pub const Directive = struct {
     id: ?[]const u8 = null,
     attrs: ?[][]const u8 = null,
     title: ?[]const u8 = null,
+    data: Data = .{},
 
     kind: Kind,
 
+    pub const Data = ziggy.dynamic.Map(ziggy.dynamic.Value);
     pub const Kind = union(enum) {
         section: Section,
         block: Block,
@@ -259,6 +262,65 @@ pub const Directive = struct {
 
                 self.title = value;
 
+                return .{ .directive = self };
+            }
+        };
+        pub const data = struct {
+            pub const signature: Signature = .{
+                .params = &.{ .str, .str, .{ .Many = .str } },
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\Adds data key-value pairs of a Directive.
+                \\
+                \\In SuperHTML data key-value pairs can be accessed 
+                \\programmatically in a template when rendering
+                \\a section, while data will turn into `data-foo`
+                \\attributes otherwise. 
+            ;
+
+            pub fn call(
+                self: *Directive,
+                gpa: Allocator,
+                args: []const Value,
+            ) !Value {
+                const bad_arg = .{
+                    .err = "expected a non-zero even number of string arguments",
+                };
+                if (args.len < 2 or args.len % 2 == 1) return bad_arg;
+
+                if (self.data.fields.count() != 0) return .{
+                    .err = "field already set",
+                };
+
+                var new: Data = .{};
+                var idx: usize = 0;
+                while (idx < args.len) {
+                    const key = switch (args[idx]) {
+                        .string => |s| s,
+                        else => return bad_arg,
+                    };
+                    idx += 1;
+
+                    const value = switch (args[idx]) {
+                        .string => |s| s,
+                        else => return bad_arg,
+                    };
+                    idx += 1;
+
+                    const gop = try new.fields.getOrPut(gpa, key);
+                    if (gop.found_existing) {
+                        return Value.errFmt(
+                            gpa,
+                            "duplicate key: '{s}'",
+                            .{key},
+                        );
+                    }
+
+                    gop.value_ptr.* = .{ .bytes = value };
+                }
+
+                self.data = new;
                 return .{ .directive = self };
             }
         };
@@ -443,11 +505,9 @@ pub const Block = struct {
             // - inside of a md heading element which in turn is under a block
             //   quote
             .HEADING => {
-                if (parent.parent().?.nodeType() != .BLOCK_QUOTE) {
-                    return .{
-                        .err = "heading blocks must be embedded under quote blocks",
-                    };
-                } else return null;
+                if (parent.parent()) |gp| {
+                    if (gp.nodeType() == .BLOCK_QUOTE) return null;
+                }
             },
             else => {},
         }

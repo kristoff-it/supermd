@@ -5,17 +5,19 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const scripty = b.dependency("scripty", .{});
+    const superhtml = b.dependency("superhtml", .{});
+    const ziggy = b.dependency("ziggy", .{}).module("ziggy");
     const gfm = b.dependency("gfm", .{});
+
     const supermd = b.addModule("supermd", .{
         .root_source_file = b.path("src/root.zig"),
         .link_libc = true,
     });
 
-    const scripty = b.dependency("scripty", .{});
-    const superhtml = b.dependency("superhtml", .{});
-
     supermd.addImport("scripty", scripty.module("scripty"));
-    supermd.addImport("scripty", superhtml.module("superhtml"));
+    supermd.addImport("superhtml", superhtml.module("superhtml"));
+    supermd.addImport("ziggy", ziggy);
     supermd.linkLibrary(gfm.artifact("cmark-gfm"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
 
@@ -26,10 +28,9 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    b.installArtifact(docgen);
+    docgen.root_module.addImport("ziggy", ziggy);
 
-    // const ziggy = b.dependency("ziggy", .{ .target = target, .optimize = optimize });
-    // supermd.addImport("ziggy", ziggy.module("ziggy"));
+    b.installArtifact(docgen);
 
     const unit_tests = b.addTest(.{
         .root_source_file = b.path("src/root.zig"),
@@ -38,6 +39,7 @@ pub fn build(b: *std.Build) !void {
     });
     unit_tests.root_module.addImport("scripty", scripty.module("scripty"));
     unit_tests.root_module.addImport("superhtml", superhtml.module("superhtml"));
+    unit_tests.root_module.addImport("ziggy", ziggy);
     unit_tests.root_module.linkLibrary(gfm.artifact("cmark-gfm"));
     unit_tests.root_module.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
     const run_unit_tests = b.addRunArtifact(unit_tests);

@@ -14,6 +14,10 @@
             .url = "git+https://github.com/kristoff-it/superhtml#15e2efb525338d15aab57dc5fda7a3badbd3ed5b",
             .hash = "12205fb978583b0c0d6915a2763b01b7f9eaa7ffbea4afa1a68e80191622be09ea15",
         },
+        .ziggy = .{
+            .url = "git+https://github.com/kristoff-it/ziggy#c66f47bc632c66668d61fa06eda112b41d6e5130",
+            .hash = "1220115ff095a3c970cc90fce115294ba67d6fbc4927472dc856abc51e2a1a9364d7",
+        },
     },
     .paths = .{"."},
 }
