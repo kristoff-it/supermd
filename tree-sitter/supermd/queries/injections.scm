@@ -5,8 +5,8 @@
 
 ((html_block) @injection.content (#set! injection.language "html"))
 
-(document . (section . (thematic_break) (_) @injection.content (thematic_break)) (#set! injection.language "yaml"))
+(document . (section . (thematic_break) (_) @injection.content (thematic_break)) (#set! injection.language "ziggy"))
 
-([(minus_metadata) (plus_metadata)] @injection.content (#set! injection.language "yml"))
+((minus_metadata) @injection.content (#set! injection.language "ziggy"))
 
 ((inline) @injection.content (#set! injection.language "supermd_inline"))
