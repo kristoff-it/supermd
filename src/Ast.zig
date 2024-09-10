@@ -374,6 +374,17 @@ const Parser = struct {
                 return n.setDirective(p.gpa, &d, true);
             },
             else => {
+                if (std.mem.startsWith(u8, src, "mailto:")) {
+                    var d: Directive = .{
+                        .kind = .{
+                            .link = .{
+                                .src = .{ .url = src },
+                                .new = true,
+                            },
+                        },
+                    };
+                    return n.setDirective(p.gpa, &d, true);
+                }
                 if (std.mem.indexOf(u8, src, "://") != null) {
                     _ = std.Uri.parse(src) catch {
                         try p.addError(n.range(), .{
