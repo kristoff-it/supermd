@@ -179,3 +179,7 @@ pub fn prependChild(p: Node, new_child: Node) !void {
 pub fn unlink(n: Node) void {
     c.cmark_node_unlink(n.n);
 }
+
+pub fn renderPlaintext(n: Node) ![]const u8 {
+    return std.mem.span(c.cmark_render_plaintext(n.n, 0, 0));
+}
