@@ -181,5 +181,5 @@ pub fn unlink(n: Node) void {
 }
 
 pub fn renderPlaintext(n: Node) ![]const u8 {
-    return std.mem.span(c.cmark_render_plaintext(n.n, 0, 0));
+    return std.mem.span(c.cmark_render_plaintext(n.n, 0, 0) orelse return error.OutOfMemory);
 }
