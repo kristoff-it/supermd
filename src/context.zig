@@ -10,10 +10,11 @@ pub const Content = struct {
     section: Directive = .{ .kind = .{ .section = .{} } },
     block: Directive = .{ .kind = .{ .block = .{} } },
     heading: Directive = .{ .kind = .{ .heading = .{} } },
-    image: Directive = .{ .kind = .{ .image = .{} } },
-    video: Directive = .{ .kind = .{ .video = .{} } },
+    text: Directive = .{ .kind = .{ .text = .{} } },
     link: Directive = .{ .kind = .{ .link = .{} } },
     code: Directive = .{ .kind = .{ .code = .{} } },
+    image: Directive = .{ .kind = .{ .image = .{} } },
+    video: Directive = .{ .kind = .{ .video = .{} } },
 
     pub const dot = scripty.defaultDot(Content, Value, true);
     pub const description =
@@ -25,10 +26,11 @@ pub const Content = struct {
         pub const section = Section.description;
         pub const block = Block.description;
         pub const heading = Heading.description;
-        pub const image = Image.description;
-        pub const video = Video.description;
+        pub const text = Text.description;
         pub const link = Link.description;
         pub const code = Code.description;
+        pub const image = Image.description;
+        pub const video = Video.description;
     };
     pub const Builtins = struct {};
 };
@@ -127,6 +129,7 @@ pub const Directive = struct {
         video: Video,
         link: Link,
         code: Code,
+        text: Text,
         // sound: struct {
         //     id: ?[]const u8 = null,
         //     attrs: ?[]const []const u8 = null,
@@ -395,6 +398,34 @@ pub const Section = struct {
         //     \\property set.
         // );
     };
+};
+
+pub const Text = struct {
+    pub const Builtins = struct {};
+    pub const description =
+        \\Allows giving an id and attributes to some text.
+        \\
+        \\Example:
+        \\```markdown
+        \\Hello [World]($text.id('foo').attrs('bar', 'baz'))!
+        \\```
+        \\
+        \\This will be rendered by SuperHTML as:
+        \\```html
+        \\Hello <span id="foo" class="bar baz">World</span>!
+        \\```
+    ;
+
+    pub fn validate(_: Allocator, _: *Directive, ctx: Node) !?Value {
+        const err: Value = .{
+            .err = "text directive must contain some text between square brackets",
+        };
+
+        const text = ctx.firstChild().?.literal() orelse return err;
+        if (text.len == 0) return err;
+
+        return null;
+    }
 };
 
 pub const Heading = struct {
