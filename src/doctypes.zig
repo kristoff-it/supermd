@@ -33,6 +33,7 @@ pub const ScriptyParam = union(enum) {
     Section,
     Block,
     Heading,
+    Text,
     Link,
     Image,
     Video,
@@ -48,11 +49,13 @@ pub const ScriptyParam = union(enum) {
     };
 
     pub fn fromField(T: type, fs: []const u8) ScriptyParam {
+        @setEvalBranchQuota(10000);
         const fe = std.meta.stringToEnum(std.meta.FieldEnum(T), fs).?;
         return switch (fe) {
             .block => .Block,
             .section => .Section,
             .heading => .Heading,
+            .text => .Text,
             .image => .Image,
             .video => .Video,
             .link => .Link,
@@ -67,6 +70,7 @@ pub const ScriptyParam = union(enum) {
             context.Section => .Section,
             context.Block => .Block,
             context.Heading => .Heading,
+            context.Text => .Text,
             context.Link => .Link,
             context.Image => .Image,
             context.Video => .Video,
