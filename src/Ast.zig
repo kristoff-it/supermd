@@ -193,8 +193,8 @@ const Parser = struct {
     }
     pub fn analyzeBlockQuote(p: *Parser, quote: Node) !void {
         const para_or_h = quote.firstChild() orelse return;
-        std.debug.assert(para_or_h.nodeType() == .PARAGRAPH or
-            para_or_h.nodeType() == .HEADING);
+        // std.debug.assert(para_or_h.nodeType() == .PARAGRAPH or
+        //     para_or_h.nodeType() == .HEADING);
         const link = para_or_h.firstChild() orelse return;
         var next: ?Node = link;
         blk: {
@@ -227,7 +227,6 @@ const Parser = struct {
         while (current) |n| {
             const kind = n.nodeType();
             switch (kind) {
-                .BLOCK_QUOTE,
                 .LIST,
                 .ITEM,
                 .CODE_BLOCK,
@@ -529,7 +528,7 @@ const CMarkAst = struct {
 fn cmark(src: []const u8) CMarkAst {
     c.cmark_gfm_core_extensions_ensure_registered();
     const extensions = supermd.cmark_list_syntax_extensions(c.cmark_get_arena_mem_allocator());
-    const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE;
+    const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE | c.CMARK_OPT_SMART;
     const parser = c.cmark_parser_new(options);
     defer c.cmark_parser_free(parser);
 
@@ -537,6 +536,22 @@ fn cmark(src: []const u8) CMarkAst {
         parser,
         c.cmark_find_syntax_extension("table"),
     );
+
+    _ = c.cmark_parser_attach_syntax_extension(
+        parser,
+        c.cmark_find_syntax_extension("strikethrough"),
+    );
+
+    _ = c.cmark_parser_attach_syntax_extension(
+        parser,
+        c.cmark_find_syntax_extension("tasklist"),
+    );
+
+    _ = c.cmark_parser_attach_syntax_extension(
+        parser,
+        c.cmark_find_syntax_extension("autolink"),
+    );
+
     c.cmark_parser_feed(parser, src.ptr, src.len);
     const root = c.cmark_parser_finish(parser).?;
     return .{
