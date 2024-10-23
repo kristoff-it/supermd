@@ -110,10 +110,10 @@ const Parser = struct {
             switch (directive.kind) {
                 else => break :blk,
                 .block => {
-                    try p.addError(
-                        link.range(),
-                        .must_be_first_under_blockquote,
-                    );
+                    // try p.addError(
+                    //     link.range(),
+                    //     .must_be_first_under_blockquote,
+                    // );
                     return;
                 },
                 .heading => {
