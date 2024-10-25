@@ -38,6 +38,7 @@ pub const Error = struct {
         no_alt_in_links,
         expression_in_image_syntax,
         empty_expression,
+        duplicate_id,
 
         scripty: struct {
             span: Span,
@@ -310,13 +311,27 @@ const Parser = struct {
                     const src = n.link() orelse return;
                     const directive = try p.runScript(n, src) orelse return;
                     switch (directive.kind) {
-                        else => continue,
-                        .section => {
+                        else => {
+                            if (directive.id) |id| {
+                                const gop = try p.ids.getOrPut(p.gpa, id);
+                                if (gop.found_existing) {
+                                    try p.addError(n.range(), .duplicate_id);
+                                } else {
+                                    gop.value_ptr.* = n;
+                                }
+                            }
+                        },
+                        .section, .heading => {
                             const parent = n.parent().?;
                             _ = try parent.setDirective(p.gpa, directive, false);
 
                             if (directive.id) |id| {
-                                try p.ids.put(p.gpa, id, parent);
+                                const gop = try p.ids.getOrPut(p.gpa, id);
+                                if (gop.found_existing) {
+                                    try p.addError(n.range(), .duplicate_id);
+                                } else {
+                                    gop.value_ptr.* = parent;
+                                }
                             }
                         },
                     }
