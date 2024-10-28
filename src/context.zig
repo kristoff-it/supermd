@@ -633,6 +633,8 @@ pub const Video = struct {
 pub const Link = struct {
     src: ?Src = null,
     ref: ?[]const u8 = null,
+    ref_unsafe: bool = false,
+
     new: ?bool = null,
 
     pub const description =
@@ -672,8 +674,15 @@ pub const Link = struct {
                 .ret = .anydirective,
             };
             pub const description =
-                \\Deep-links to a specific section of either the current
+                \\Deep-links to a specific element (like a section or any
+                \\directive that specifies an `id`) of either the current
                 \\page or a target page set with `page()`.
+                \\
+                \\Zine tracks all ids defined in content files so referencing 
+                \\an id that doesn't exist will result in a build error.
+                \\
+                \\Zine does not track ids defined inside of templates so 
+                \\use `unsafeRef` to deep-link to those. 
             ;
 
             pub fn call(
@@ -696,6 +705,42 @@ pub const Link = struct {
                 }
 
                 self.ref = str;
+                return .{ .directive = d };
+            }
+        };
+
+        pub const unsafeRef = struct {
+            pub const signature: Signature = .{
+                .params = &.{.str},
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\Like `ref` but Zine will not perform any id checking.
+                \\
+                \\Can be used to deep-link to ids specified in templates. 
+            ;
+
+            pub fn call(
+                self: *Link,
+                d: *Directive,
+                _: Allocator,
+                args: []const Value,
+            ) !Value {
+                const bad_arg = .{ .err = "expected 1 string argument" };
+
+                if (args.len != 1) return bad_arg;
+
+                const str = switch (args[0]) {
+                    .string => |s| s,
+                    else => return bad_arg,
+                };
+
+                if (self.ref != null) {
+                    return .{ .err = "field already set" };
+                }
+
+                self.ref = str;
+                self.ref_unsafe = true;
                 return .{ .directive = d };
             }
         };

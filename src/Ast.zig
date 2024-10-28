@@ -159,6 +159,7 @@ const Parser = struct {
     pub fn analyzeParagraph(p: *Parser, block: Node) !void {
         try p.analyzeSiblings(block.firstChild(), block);
     }
+
     pub fn analyzeCodeBlock(p: *Parser, block: Node) !void {
         const fence = block.fenceInfo() orelse return;
         if (std.mem.startsWith(u8, fence, "=html")) {
@@ -347,9 +348,11 @@ const Parser = struct {
             try p.addError(n.range(), .empty_expression);
             return null;
         }
+
         if (n.title().?.len > 0) {
             try p.addError(n.range(), .no_alt_in_links);
         }
+
         switch (src[0]) {
             '$' => {},
             '#' => {
@@ -457,8 +460,10 @@ const Parser = struct {
                     .link => |lnk| switch (lnk.src.?) {
                         else => {},
                         .self_page => {
-                            const hash = lnk.ref.?;
-                            try p.referenced_ids.put(p.gpa, hash, n);
+                            if (!lnk.ref_unsafe) {
+                                const hash = lnk.ref.?;
+                                try p.referenced_ids.put(p.gpa, hash, n);
+                            }
                         },
                     },
                 }
