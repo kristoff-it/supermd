@@ -632,6 +632,7 @@ pub const Video = struct {
 
 pub const Link = struct {
     src: ?Src = null,
+    alternative: ?[]const u8 = null,
     ref: ?[]const u8 = null,
     ref_unsafe: bool = false,
 
@@ -642,9 +643,13 @@ pub const Link = struct {
     ;
     pub fn validate(_: Allocator, d: *Directive, _: Node) !?Value {
         const self = &d.kind.link;
-        if (self.ref != null) {
+        if (self.ref != null or self.alternative != null) {
             if (self.src == null) {
                 self.src = .self_page;
+            } else if (self.src.? != .self_page and self.src.? != .page) {
+                return .{
+                    .err = "`ref` and `alternative` can only be specified when linking to a content page",
+                };
             }
         }
 
@@ -667,7 +672,43 @@ pub const Link = struct {
             \\When `true` it asks readers to open the link in a new window or 
             \\tab.
         );
+        pub const alternative = struct {
+            pub const signature: Signature = .{
+                .params = &.{.str},
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\When linking to a content page, allows to link to a specific
+                \\alternative version of the page, which can be particularly
+                \\useful when referencing the RSS feed version of a page.
+                \\
+                \\The string argument is the name of an alrenative as defined 
+                \\in the page's `alternatives` frontmatter property.
+            ;
 
+            pub fn call(
+                self: *Link,
+                d: *Directive,
+                _: Allocator,
+                args: []const Value,
+            ) !Value {
+                const bad_arg = .{ .err = "expected 1 string argument" };
+
+                if (args.len != 1) return bad_arg;
+
+                const str = switch (args[0]) {
+                    .string => |s| s,
+                    else => return bad_arg,
+                };
+
+                if (self.alternative != null) {
+                    return .{ .err = "field already set" };
+                }
+
+                self.alternative = str;
+                return .{ .directive = d };
+            }
+        };
         pub const ref = struct {
             pub const signature: Signature = .{
                 .params = &.{.str},

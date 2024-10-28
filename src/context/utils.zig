@@ -272,7 +272,7 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
-            @field(self, "src") = .{
+            self.src = .{
                 .page = .{
                     .kind = .absolute,
                     .ref = ref,
