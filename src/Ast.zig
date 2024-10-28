@@ -460,7 +460,7 @@ const Parser = struct {
                     .link => |lnk| switch (lnk.src.?) {
                         else => {},
                         .self_page => {
-                            if (!lnk.ref_unsafe) {
+                            if (!lnk.ref_unsafe and lnk.ref != null) {
                                 const hash = lnk.ref.?;
                                 try p.referenced_ids.put(p.gpa, hash, n);
                             }
