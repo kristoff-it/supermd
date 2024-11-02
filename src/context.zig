@@ -555,6 +555,7 @@ pub const Image = struct {
     alt: ?[]const u8 = null,
     src: ?Src = null,
     linked: ?bool = null,
+    size: ?struct{ w: i64, h: i64 } = null,
 
     pub const mandatory = .{.src};
     pub const directive_mandatory = .{};
