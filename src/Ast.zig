@@ -71,7 +71,7 @@ pub fn init(gpa: Allocator, src: []const u8) error{OutOfMemory}!Ast {
         .PARAGRAPH => try p.analyzeParagraph(n),
         .HEADING => try p.analyzeHeading(n),
         .THEMATIC_BREAK => {},
-        .FOOTNOTE_DEFINITION => @panic("TODO: footnotes"),
+        .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
         else => {},
     };
 
@@ -222,6 +222,9 @@ const Parser = struct {
     }
     pub fn analyzeItem(p: *Parser, block: Node) !void {
         try p.analyzeSiblings(block.firstChild(), block);
+    }
+    pub fn analyzeFootnoteDefinition(p: *Parser, footnote: Node) !void {
+        try p.analyzeSiblings(footnote.firstChild(), footnote);
     }
 
     pub fn analyzeSiblings(p: *Parser, start: ?Node, stop: Node) error{OutOfMemory}!void {
@@ -548,7 +551,7 @@ const CMarkAst = struct {
 fn cmark(src: []const u8) CMarkAst {
     c.cmark_gfm_core_extensions_ensure_registered();
     const extensions = supermd.cmark_list_syntax_extensions(c.cmark_get_arena_mem_allocator());
-    const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE | c.CMARK_OPT_SMART;
+    const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE | c.CMARK_OPT_SMART | c.CMARK_OPT_FOOTNOTES;
     const parser = c.cmark_parser_new(options);
     defer c.cmark_parser_free(parser);
 
