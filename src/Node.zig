@@ -108,8 +108,17 @@ pub fn listIsTight(n: Node) bool {
     return 1 == c.cmark_node_get_list_tight(n.n);
 }
 
+pub fn parentFootnoteDef(n: Node) ?Node {
+    const ptr = c.cmark_node_parent_footnote_def(n.n) orelse return null;
+    return .{ .n = ptr };
+}
+
 pub fn footnoteDefCount(n: Node) i32 {
     return c.cmark_node_get_footnote_def_count(n.n);
+}
+
+pub fn footnoteRefIx(n: Node) i32 {
+    return c.cmark_node_get_footnote_ref_ix(n.n);
 }
 
 pub fn parent(n: Node) ?Node {

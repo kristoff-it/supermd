@@ -14,11 +14,19 @@ const Content = supermd.Content;
 const Directive = supermd.Directive;
 const Allocator = std.mem.Allocator;
 const ScriptyVM = scripty.VM(Content, Value);
+const log = std.log.scoped(.supermd);
 
 md: CMarkAst,
 errors: []const Error,
 ids: std.StringArrayHashMapUnmanaged(Node) = .{},
+footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
 arena: std.heap.ArenaAllocator.State,
+
+pub const Footnote = struct {
+    node: Node,
+    def_id: []const u8,
+    ref_ids: [][]const u8,
+};
 
 pub const Error = struct {
     main: Range,
@@ -58,6 +66,7 @@ pub fn init(gpa: Allocator, src: []const u8) error{OutOfMemory}!Ast {
     var arena_impl = std.heap.ArenaAllocator.init(gpa);
     const arena = arena_impl.allocator();
 
+    log.debug("starting analysis", .{});
     var p: Parser = .{ .gpa = arena };
     const ast = cmark(src);
     var current = ast.root.firstChild();
@@ -84,10 +93,15 @@ pub fn init(gpa: Allocator, src: []const u8) error{OutOfMemory}!Ast {
         }
     }
 
+    for (p.footnotes.values()) |footnote| {
+        footnote.node.unlink();
+    }
+
     return .{
         .md = ast,
         .errors = try p.errors.toOwnedSlice(gpa),
         .ids = p.ids,
+        .footnotes = p.footnotes,
         .arena = arena_impl.state,
     };
 }
@@ -97,6 +111,7 @@ const Parser = struct {
     errors: std.ArrayListUnmanaged(Error) = .{},
     ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     referenced_ids: std.StringArrayHashMapUnmanaged(Node) = .{},
+    footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
     vm: ScriptyVM = .{},
 
     pub fn analyzeHeading(p: *Parser, h: Node) !void {
@@ -223,6 +238,31 @@ const Parser = struct {
     pub fn analyzeItem(p: *Parser, block: Node) !void {
         try p.analyzeSiblings(block.firstChild(), block);
     }
+    pub fn analyzeFootnoteReference(p: *Parser, footnoteRef: Node) !void {
+        const name = footnoteRef.literal().?;
+        const result = try p.footnotes.getOrPut(p.gpa, name);
+        log.debug("found footnote {s}: {any}", .{ name, result.found_existing });
+        if (!result.found_existing) {
+            const def = footnoteRef.parentFootnoteDef().?;
+            const def_id = try std.fmt.allocPrint(p.gpa, "fn-{d}", .{result.index + 1});
+            try p.ids.put(p.gpa, def_id, def);
+
+            const ref_ids = try p.gpa.alloc([]const u8, @intCast(def.footnoteDefCount()));
+            for (ref_ids, 0..) |_, ref_idx| {
+                ref_ids[ref_idx] = try std.fmt.allocPrint(p.gpa, "fn-{d}-ref-{d}", .{ result.index + 1, ref_idx + 1 });
+            }
+
+            result.value_ptr.* = .{
+                .def_id = def_id,
+                .ref_ids = ref_ids,
+                .node = def,
+            };
+        }
+
+        // cmark-gfm uses 1-based indices.
+        const ref_id = result.value_ptr.*.ref_ids[@intCast(footnoteRef.footnoteRefIx() - 1)];
+        try p.ids.put(p.gpa, ref_id, footnoteRef);
+    }
     pub fn analyzeFootnoteDefinition(p: *Parser, footnote: Node) !void {
         try p.analyzeSiblings(footnote.firstChild(), footnote);
     }
@@ -256,6 +296,7 @@ const Parser = struct {
                 .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
                 .PARAGRAPH => try p.analyzeParagraph(n),
                 .HEADING => try p.analyzeHeading(n),
+                .FOOTNOTE_REFERENCE => try p.analyzeFootnoteReference(n),
                 .IMAGE => {
                     const src = n.link() orelse return;
                     switch (src[0]) {
