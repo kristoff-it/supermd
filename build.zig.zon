@@ -3,8 +3,8 @@
     .version = "0.0.0",
     .dependencies = .{
         .gfm = .{
-            .url = "git+https://github.com/kristoff-it/cmark-gfm.git#b7034624e7da6857a26e4720cd7fde26d5bc715c",
-            .hash = "122018a99dd8299e00d6b3279fc5fee9f93fd4c773db34f6390fcbed320cf4d652c1",
+            .url = "git+https://github.com/kristoff-it/cmark-gfm#a71fa22814c84f5ce7214c6c334e430fd96d41ac",
+            .hash = "1220f377f64baf5afd6f3517b892268a6ba9505e706d0341f5c7dfe673ec4b98b74f",
         },
         .scripty = .{
             .url = "git+https://github.com/kristoff-it/scripty#df8c11380f9e9bec34809f2242fb116d27cf39d6",
