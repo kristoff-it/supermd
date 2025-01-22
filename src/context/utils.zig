@@ -12,9 +12,9 @@ pub fn directiveCall(
 ) !ctx.Value {
     switch (d.kind) {
         inline else => |*k, tag| {
-            const Bs = @typeInfo(@TypeOf(k)).Pointer.child.Builtins;
+            const Bs = @typeInfo(@TypeOf(k)).pointer.child.Builtins;
 
-            inline for (@typeInfo(Bs).Struct.decls) |decl| {
+            inline for (@typeInfo(Bs).@"struct".decls) |decl| {
                 if (decl.name[0] == '_') continue;
                 if (std.mem.eql(u8, decl.name, fn_name)) {
                     return @field(Bs, decl.name).call(
@@ -38,7 +38,7 @@ pub fn directiveCall(
 // Creates a basic builtin to set a field in a Directive
 pub fn directiveBuiltin(
     comptime field_name: []const u8,
-    comptime tag: @typeInfo(ctx.Value).Union.tag_type.?,
+    comptime tag: @typeInfo(ctx.Value).@"union".tag_type.?,
     comptime desc: []const u8,
 ) type {
     return struct {
@@ -61,7 +61,7 @@ pub fn directiveBuiltin(
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{
+            const bad_arg: ctx.Value = .{
                 .err = std.fmt.comptimePrint("expected 1 {s} argument", .{
                     @tagName(tag),
                 }),
@@ -107,7 +107,7 @@ pub const SrcBuiltins = struct {
             gpa: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 string argument" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const link = switch (args[0]) {
@@ -149,7 +149,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 string argument" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const page_asset = switch (args[0]) {
@@ -180,7 +180,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 string argument" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const site_asset = switch (args[0]) {
@@ -210,7 +210,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 string argument" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const build_asset = switch (args[0]) {
@@ -255,7 +255,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 or 2 string arguments" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {
@@ -300,7 +300,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 or 2 string arguments" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {
@@ -347,7 +347,7 @@ pub const SrcBuiltins = struct {
             _: Allocator,
             args: []const ctx.Value,
         ) !ctx.Value {
-            const bad_arg = .{ .err = "expected 1 or 2 string arguments" };
+            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {

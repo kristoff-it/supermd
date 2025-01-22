@@ -93,16 +93,16 @@ pub const Value = union(enum) {
     pub const call = scripty.defaultCall(Value);
 
     pub fn builtinsFor(
-        comptime tag: @typeInfo(Value).Union.tag_type.?,
+        comptime tag: @typeInfo(Value).@"union".tag_type.?,
     ) type {
         const f = std.meta.fieldInfo(Value, tag);
         switch (@typeInfo(f.type)) {
-            .Pointer => |ptr| {
-                if (@typeInfo(ptr.child) == .Struct) {
+            .pointer => |ptr| {
+                if (@typeInfo(ptr.child) == .@"struct") {
                     return @field(ptr.child, "Builtins");
                 }
             },
-            .Struct => {
+            .@"struct" => {
                 return @field(f.type, "Builtins");
             },
             else => {},
@@ -186,7 +186,7 @@ pub const Directive = struct {
                 _: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{
+                const bad_arg: Value = .{
                     .err = "expected 1 string argument",
                 };
                 if (args.len != 1) return bad_arg;
@@ -217,7 +217,7 @@ pub const Directive = struct {
                 gpa: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{
+                const bad_arg: Value = .{
                     .err = "expected 1 or more string arguments",
                 };
                 if (args.len == 0) return bad_arg;
@@ -251,7 +251,7 @@ pub const Directive = struct {
                 _: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{
+                const bad_arg: Value = .{
                     .err = "expected 1 string argument",
                 };
                 if (args.len != 1) return bad_arg;
@@ -287,7 +287,7 @@ pub const Directive = struct {
                 gpa: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{
+                const bad_arg: Value = .{
                     .err = "expected a non-zero even number of string arguments",
                 };
                 if (args.len < 2 or args.len % 2 == 1) return bad_arg;
@@ -555,7 +555,7 @@ pub const Image = struct {
     alt: ?[]const u8 = null,
     src: ?Src = null,
     linked: ?bool = null,
-    size: ?struct{ w: i64, h: i64 } = null,
+    size: ?struct { w: i64, h: i64 } = null,
 
     pub const mandatory = .{.src};
     pub const directive_mandatory = .{};
@@ -693,7 +693,7 @@ pub const Link = struct {
                 _: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{ .err = "expected 1 string argument" };
+                const bad_arg: Value = .{ .err = "expected 1 string argument" };
 
                 if (args.len != 1) return bad_arg;
 
@@ -733,7 +733,7 @@ pub const Link = struct {
                 _: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{ .err = "expected 1 string argument" };
+                const bad_arg: Value = .{ .err = "expected 1 string argument" };
 
                 if (args.len != 1) return bad_arg;
 
@@ -768,7 +768,7 @@ pub const Link = struct {
                 _: Allocator,
                 args: []const Value,
             ) !Value {
-                const bad_arg = .{ .err = "expected 1 string argument" };
+                const bad_arg: Value = .{ .err = "expected 1 string argument" };
 
                 if (args.len != 1) return bad_arg;
 
