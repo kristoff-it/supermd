@@ -237,7 +237,7 @@ fn analyzeBuiltins(T: type) []const Reference.Builtin {
 }
 
 fn analyzeFields(T: type) []const Reference.Field {
-    const info = @typeInfo(T).Struct;
+    const info = @typeInfo(T).@"struct";
     var reference_fields: [info.fields.len]Reference.Field = undefined;
     var idx: usize = 0;
     for (info.fields) |tf| {
