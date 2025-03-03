@@ -385,9 +385,10 @@ const Parser = struct {
             }
         }
     }
+
     // If the script results in anything other than a Directive,
     // an error is appended and the function will return null.
-    pub fn runScript(p: *Parser, n: Node, src: []const u8) !?*Directive {
+    fn runScript(p: *Parser, n: Node, src: []const u8) !?*Directive {
         if (src.len == 0) {
             try p.addError(n.range(), .empty_expression);
             return null;

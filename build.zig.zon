@@ -1,18 +1,20 @@
 .{
-    .name = "supermd",
-    .version = "0.0.0",
+    .name = .supermd,
+    .version = "0.1.0",
+    .fingerprint = 0x23d062d1dc28c7dc,
+    .minimum_zig_version = "0.14.0-dev.3451+d8d2aa9af",
     .dependencies = .{
         .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#c76ef31dd5429725220de30504bde89a68565ece",
-            .hash = "1220c242654fe9bdd1be1fdb7b8e142842adc9adcc987efe7eb64af6451f45cbbc34",
+            .url = "git+https://github.com/kristoff-it/scripty#458ed4724feeae91727da4771ffccc5d3ea20a12",
+            .hash = "scripty-0.1.0-LKK5O5--AAAYA23ErngQEPW9Il_kiljcfTRUkDgwK2G4",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#9266b3131bbcc0705b3b752bcb7478871a143740",
-            .hash = "1220f49c7d559480568d02c4d8824724a69531d9fc3ac37e2dd094f54e09c230b404",
+            .url = "git+https://github.com/kristoff-it/superhtml#44abb10a4b28b8b66710e8d4a56aa897b52c11a5",
+            .hash = "superhtml-0.4.0-Y7MdPAO-DQBYgmK4BdwPLIb3XN-3l5Xt4lRdgR3UnHCD",
         },
         .ziggy = .{
-            .url = "git+https://github.com/kristoff-it/ziggy#3518133e9ebea7c372eff4def368eda8488fad18",
-            .hash = "12209b6577a9c749085c2c5c9c7e4fb24adc9db7ee4a88f126616110667a600279ac",
+            .url = "git+https://github.com/kristoff-it/ziggy#af41bdb5b1d64404c2ec7eb1d9de01083c0d2596",
+            .hash = "ziggy-0.1.0-kTg8v7rKBQCdELbScM186Uh4X3sxhBFgsdNpYcilLhDt",
         },
         .gfm = .{
             .url = "git+https://github.com/kristoff-it/cmark-gfm#a71fa22814c84f5ce7214c6c334e430fd96d41ac",
