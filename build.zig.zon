@@ -5,12 +5,12 @@
     .minimum_zig_version = "0.14.0-dev.3451+d8d2aa9af",
     .dependencies = .{
         .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#458ed4724feeae91727da4771ffccc5d3ea20a12",
-            .hash = "scripty-0.1.0-LKK5O5--AAAYA23ErngQEPW9Il_kiljcfTRUkDgwK2G4",
+            .url = "git+https://github.com/kristoff-it/scripty#7bd74607d3c087ecf1959f105ef80c81ecba7820",
+            .hash = "scripty-0.1.0-LKK5O7y_AAB8jPuXhqVAPeomvFRXp7-drWYMnjssAWQS",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#44abb10a4b28b8b66710e8d4a56aa897b52c11a5",
-            .hash = "superhtml-0.4.0-Y7MdPAO-DQBYgmK4BdwPLIb3XN-3l5Xt4lRdgR3UnHCD",
+            .url = "git+https://github.com/kristoff-it/superhtml#15ff939100f9d52342445407973f3ce125a8437e",
+            .hash = "superhtml-0.4.0-Y7MdPAO-DQCNkEfeCBPPAqiISmjpUMEZDKj41YW3_oFc",
         },
         .ziggy = .{
             .url = "git+https://github.com/kristoff-it/ziggy#af41bdb5b1d64404c2ec7eb1d9de01083c0d2596",
