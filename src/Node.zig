@@ -82,7 +82,12 @@ pub fn link(self: Node) ?[:0]const u8 {
 }
 pub fn title(self: Node) ?[:0]const u8 {
     const ptr = c.cmark_node_get_title(self.n) orelse return null;
-    return std.mem.span(ptr);
+    const str = std.mem.span(ptr);
+    if (str.len == 0) {
+        return null;
+    } else {
+        return str;
+    }
 }
 pub fn literal(self: Node) ?[:0]const u8 {
     const ptr = c.cmark_node_get_literal(self.n) orelse return null;
