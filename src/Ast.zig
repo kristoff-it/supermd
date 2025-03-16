@@ -1,6 +1,8 @@
 const Ast = @This();
 
 const std = @import("std");
+const builtin = @import("builtin");
+const ziggy = @import("ziggy");
 const scripty = @import("scripty");
 const superhtml = @import("superhtml");
 const supermd = @import("root.zig");
@@ -62,13 +64,54 @@ pub fn deinit(a: Ast, gpa: Allocator) void {
     a.arena.promote(gpa).deinit();
 }
 
-pub fn init(gpa: Allocator, src: []const u8) error{OutOfMemory}!Ast {
+pub const CmarkParser = struct {
+    parser: *c.cmark_parser,
+
+    pub fn default() CmarkParser {
+        const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE | c.CMARK_OPT_SMART | c.CMARK_OPT_FOOTNOTES;
+
+        const parser = c.cmark_parser_new(options);
+
+        _ = c.cmark_parser_attach_syntax_extension(
+            parser,
+            c.cmark_find_syntax_extension("table"),
+        );
+
+        _ = c.cmark_parser_attach_syntax_extension(
+            parser,
+            c.cmark_find_syntax_extension("strikethrough"),
+        );
+
+        _ = c.cmark_parser_attach_syntax_extension(
+            parser,
+            c.cmark_find_syntax_extension("tasklist"),
+        );
+
+        _ = c.cmark_parser_attach_syntax_extension(
+            parser,
+            c.cmark_find_syntax_extension("autolink"),
+        );
+        return .{ .parser = parser.? };
+    }
+};
+
+pub fn init(
+    gpa: Allocator,
+    src: []const u8,
+    rcp: CmarkParser,
+) error{OutOfMemory}!Ast {
     var arena_impl = std.heap.ArenaAllocator.init(gpa);
     const arena = arena_impl.allocator();
 
     log.debug("starting analysis", .{});
     var p: Parser = .{ .gpa = arena };
-    const ast = cmark(src);
+
+    c.cmark_parser_feed(rcp.parser, src.ptr, src.len);
+    const ast: CMarkAst = .{
+        .root = .{ .n = c.cmark_parser_finish(rcp.parser).? },
+        .extensions = c.cmark_parser_get_syntax_extensions(rcp.parser),
+    };
+
     var current = ast.root.firstChild();
     while (current) |n| : (current = n.nextSibling()) switch (n.nodeType()) {
         .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
@@ -340,10 +383,11 @@ const Parser = struct {
                                 _ = try n.setDirective(p.gpa, &d, true);
                             }
 
+                            const clean_src = if (std.mem.startsWith(u8, src, "./")) src[2..] else src;
                             var d: Directive = .{
                                 .kind = .{
                                     .image = .{
-                                        .src = .{ .page_asset = src },
+                                        .src = .{ .page_asset = clean_src },
                                         .alt = n.title(),
                                     },
                                 },
@@ -587,12 +631,17 @@ pub const Iter = struct {
 
 const CMarkAst = struct {
     root: Node,
-    extensions: [*c]c.cmark_llist,
+    extensions: [*]c.cmark_llist,
 };
 
 fn cmark(src: []const u8) CMarkAst {
-    c.cmark_gfm_core_extensions_ensure_registered();
-    const extensions = supermd.cmark_list_syntax_extensions(c.cmark_get_arena_mem_allocator());
+    const extensions = blk: {
+        c.cmark_gfm_core_extensions_ensure_registered();
+        break :blk supermd.cmark_list_syntax_extensions(
+            c.cmark_get_arena_mem_allocator(),
+        );
+    };
+
     const options = c.CMARK_OPT_DEFAULT | c.CMARK_OPT_SAFE | c.CMARK_OPT_SMART | c.CMARK_OPT_FOOTNOTES;
     const parser = c.cmark_parser_new(options);
     defer c.cmark_parser_free(parser);
@@ -675,7 +724,8 @@ test "basics" {
         \\
     ;
 
-    const ast = try Ast.init(std.testing.allocator, case);
+    c.cmark_gfm_core_extensions_ensure_registered();
+    const ast = try Ast.init(std.testing.allocator, case, .default());
     defer ast.deinit(std.testing.allocator);
     try std.testing.expectFmt(expected, "{}", .{ast});
 }
@@ -694,7 +744,8 @@ test "image" {
         \\
     ;
 
-    const ast = try Ast.init(std.testing.allocator, case);
+    c.cmark_gfm_core_extensions_ensure_registered();
+    const ast = try Ast.init(std.testing.allocator, case, .default());
     defer ast.deinit(std.testing.allocator);
     try std.testing.expectFmt(expected, "{}", .{ast});
 }

@@ -90,7 +90,7 @@ pub const Value = union(enum) {
         }
     }
 
-    pub const call = scripty.defaultCall(Value);
+    pub const call = scripty.defaultCall(Value, Content);
 
     pub fn builtinsFor(
         comptime tag: @typeInfo(Value).@"union".tag_type.?,
@@ -184,6 +184,7 @@ pub const Directive = struct {
             pub fn call(
                 self: *Directive,
                 _: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{
@@ -215,6 +216,7 @@ pub const Directive = struct {
             pub fn call(
                 self: *Directive,
                 gpa: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{
@@ -249,6 +251,7 @@ pub const Directive = struct {
             pub fn call(
                 self: *Directive,
                 _: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{
@@ -285,6 +288,7 @@ pub const Directive = struct {
             pub fn call(
                 self: *Directive,
                 gpa: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{
@@ -691,6 +695,7 @@ pub const Link = struct {
                 self: *Link,
                 d: *Directive,
                 _: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{ .err = "expected 1 string argument" };
@@ -731,6 +736,7 @@ pub const Link = struct {
                 self: *Link,
                 d: *Directive,
                 _: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{ .err = "expected 1 string argument" };
@@ -766,6 +772,7 @@ pub const Link = struct {
                 self: *Link,
                 d: *Directive,
                 _: Allocator,
+                _: *const Content,
                 args: []const Value,
             ) !Value {
                 const bad_arg: Value = .{ .err = "expected 1 string argument" };

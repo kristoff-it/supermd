@@ -1,15 +1,16 @@
 const std = @import("std");
-const ctx = @import("../context.zig");
+const context = @import("../context.zig");
 const Allocator = std.mem.Allocator;
 const Signature = @import("../doctypes.zig").Signature;
 
 // Redirects calls from the outer Directive to inner Kinds
 pub fn directiveCall(
-    d: *ctx.Directive,
+    d: *context.Directive,
     gpa: Allocator,
+    ctx: *const context.Content,
     fn_name: []const u8,
-    args: []const ctx.Value,
-) !ctx.Value {
+    args: []const context.Value,
+) !context.Value {
     switch (d.kind) {
         inline else => |*k, tag| {
             const Bs = @typeInfo(@TypeOf(k)).pointer.child.Builtins;
@@ -21,12 +22,13 @@ pub fn directiveCall(
                         k,
                         d,
                         gpa,
+                        ctx,
                         args,
                     );
                 }
             }
 
-            return ctx.Value.errFmt(
+            return context.Value.errFmt(
                 gpa,
                 "builtin not found in '{s}'",
                 .{@tagName(tag)},
@@ -38,7 +40,7 @@ pub fn directiveCall(
 // Creates a basic builtin to set a field in a Directive
 pub fn directiveBuiltin(
     comptime field_name: []const u8,
-    comptime tag: @typeInfo(ctx.Value).@"union".tag_type.?,
+    comptime tag: @typeInfo(context.Value).@"union".tag_type.?,
     comptime desc: []const u8,
 ) type {
     return struct {
@@ -57,11 +59,12 @@ pub fn directiveBuiltin(
         };
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{
                 .err = std.fmt.comptimePrint("expected 1 {s} argument", .{
                     @tagName(tag),
                 }),
@@ -103,11 +106,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             gpa: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const link = switch (args[0]) {
@@ -120,7 +124,7 @@ pub const SrcBuiltins = struct {
             }
 
             const u = std.Uri.parse(link) catch |err| {
-                return ctx.Value.errFmt(gpa, "invalid URL: {}", .{err});
+                return context.Value.errFmt(gpa, "invalid URL: {}", .{err});
             };
 
             if (u.scheme.len == 0) {
@@ -145,11 +149,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const page_asset = switch (args[0]) {
@@ -176,11 +181,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const site_asset = switch (args[0]) {
@@ -206,11 +212,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 string argument" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 string argument" };
             if (args.len != 1) return bad_arg;
 
             const build_asset = switch (args[0]) {
@@ -251,11 +258,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {
@@ -296,11 +304,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {
@@ -343,11 +352,12 @@ pub const SrcBuiltins = struct {
         ;
         pub fn call(
             self: anytype,
-            d: *ctx.Directive,
+            d: *context.Directive,
             _: Allocator,
-            args: []const ctx.Value,
-        ) !ctx.Value {
-            const bad_arg: ctx.Value = .{ .err = "expected 1 or 2 string arguments" };
+            _: *const context.Content,
+            args: []const context.Value,
+        ) !context.Value {
+            const bad_arg: context.Value = .{ .err = "expected 1 or 2 string arguments" };
             if (args.len < 1 or args.len > 2) return bad_arg;
 
             const ref = switch (args[0]) {

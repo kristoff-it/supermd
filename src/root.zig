@@ -2,12 +2,16 @@ pub extern fn cmark_list_syntax_extensions([*c]c.cmark_mem) [*c]c.cmark_llist;
 pub const c = @cImport({
     @cInclude("cmark-gfm.h");
     @cInclude("cmark-gfm-core-extensions.h");
+    @cInclude("extensions/table.h");
+    @cInclude("extensions/autolink.h");
+    @cInclude("extensions/strikethrough.h");
+    @cInclude("extensions/tasklist.h");
 });
 
 pub const Ast = @import("Ast.zig");
 pub const Node = @import("Node.zig");
 
-const context = @import("context.zig");
+pub const context = @import("context.zig");
 pub const Value = context.Value;
 pub const Content = context.Content;
 pub const Directive = context.Directive;
@@ -62,7 +66,7 @@ pub const Span = struct {
     }
 
     /// Finds the line around a Span. Choose simple spans
-    //  if you don't want unwanted newlines in the middle.
+    ///  if you don't want unwanted newlines in the middle.
     pub fn line(span: Span, src: []const u8) Line {
         var idx = span.start;
         const s = while (idx > 0) : (idx -= 1) {

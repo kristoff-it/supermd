@@ -8,7 +8,10 @@ pub fn build(b: *std.Build) !void {
     const scripty = b.dependency("scripty", .{});
     const superhtml = b.dependency("superhtml", .{});
     const ziggy = b.dependency("ziggy", .{}).module("ziggy");
-    const gfm = b.dependency("gfm", .{});
+    const gfm = b.dependency("gfm", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     const supermd = b.addModule("supermd", .{
         .root_source_file = b.path("src/root.zig"),
