@@ -11,6 +11,11 @@ pub fn build(b: *std.Build) !void {
     const gfm = b.dependency("gfm", .{
         .target = target,
         .optimize = optimize,
+        .@"sanitize-thread" = b.option(
+            bool,
+            "sanitize-thread",
+            "enable thread sanitizer for cmark-gfm",
+        ) orelse (optimize == .Debug),
     });
 
     const supermd = b.addModule("supermd", .{
