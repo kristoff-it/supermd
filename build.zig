@@ -5,22 +5,26 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const tsan = b.option(
+        bool,
+        "sanitize-thread",
+        "enable thread sanitizer for cmark-gfm",
+    ) orelse false;
+
     const scripty = b.dependency("scripty", .{});
+
     const superhtml = b.dependency("superhtml", .{});
     const ziggy = b.dependency("ziggy", .{}).module("ziggy");
     const gfm = b.dependency("gfm", .{
         .target = target,
         .optimize = optimize,
-        .@"sanitize-thread" = b.option(
-            bool,
-            "sanitize-thread",
-            "enable thread sanitizer for cmark-gfm",
-        ) orelse false,
+        .@"sanitize-thread" = tsan,
     });
 
     const supermd = b.addModule("supermd", .{
         .root_source_file = b.path("src/root.zig"),
         .link_libc = true,
+        .sanitize_thread = tsan,
     });
 
     supermd.addImport("scripty", scripty.module("scripty"));
@@ -44,6 +48,7 @@ pub fn build(b: *std.Build) !void {
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+        .sanitize_thread = tsan,
     });
     unit_tests.root_module.addImport("scripty", scripty.module("scripty"));
     unit_tests.root_module.addImport("superhtml", superhtml.module("superhtml"));
