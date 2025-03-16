@@ -9,8 +9,8 @@
             .hash = "superhtml-0.4.0-Y7MdPDK_DQDDgg8BEvvhUPk4lwUi_3LMKsszgFMVYsBW",
         },
         .ziggy = .{
-            .url = "git+https://github.com/kristoff-it/ziggy#4998907d6399f3df682590e2a59b347f53e003b4",
-            .hash = "ziggy-0.1.0-kTg8vwMbBgB9vMMiMY8N0DF7MwkLcFdrdsFLAhwro2aA",
+            .url = "git+https://github.com/kristoff-it/ziggy#8a29017169f43dc2c3526817e98142eb9a335087",
+            .hash = "ziggy-0.1.0-kTg8vwkbBgAOHreabwZtDDtNDi3U_RAiOMvuRDTJiy0I",
         },
         .scripty = .{
             .url = "git+https://github.com/kristoff-it/scripty#37dad0cc4a527d9b8148db7b8bfce5cc3670e3fa",
