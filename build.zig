@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) !void {
             bool,
             "sanitize-thread",
             "enable thread sanitizer for cmark-gfm",
-        ) orelse (optimize == .Debug),
+        ) orelse false,
     });
 
     const supermd = b.addModule("supermd", .{
