@@ -438,7 +438,7 @@ const Parser = struct {
             return null;
         }
 
-        if (n.title().?.len > 0) {
+        if (n.title() != null) {
             try p.addError(n.range(), .no_alt_in_links);
         }
 
