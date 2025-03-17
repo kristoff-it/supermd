@@ -17,8 +17,8 @@
             .hash = "scripty-0.1.0-LKK5O93AAAAsHaPH44imnLqQ9dKHj-y-jOapdwBe4Dxs",
         },
         .gfm = .{
-            .url = "git+https://github.com/kristoff-it/cmark-gfm#16519faaefc07fce7f8da8d1b9f303b1ca14467a",
-            .hash = "N-V-__8AAAWYFwCVdKtbETWhsvR0DEID5Pn8dm1KIZhuDDKg",
+            .url = "git+https://github.com/kristoff-it/cmark-gfm#3647f8c6f15b8ea44e1687058c78736a11dd19a2",
+            .hash = "N-V-__8AABeYFwCrZlnYw9s48oZQVzNOySJe4a3S7DJwhILZ",
         },
     },
     .paths = .{"."},
