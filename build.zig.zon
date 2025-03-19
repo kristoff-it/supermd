@@ -4,21 +4,25 @@
     .fingerprint = 0x23d062d1dc28c7dc,
     .minimum_zig_version = "0.14.0-dev.3451+d8d2aa9af",
     .dependencies = .{
-        .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#240cc44b5fcd8e9e01180f1cbdcdd0f909a27275",
-            .hash = "superhtml-0.4.0-Y7MdPDK_DQDDgg8BEvvhUPk4lwUi_3LMKsszgFMVYsBW",
-        },
         .ziggy = .{
             .url = "git+https://github.com/kristoff-it/ziggy#8a29017169f43dc2c3526817e98142eb9a335087",
             .hash = "ziggy-0.1.0-kTg8vwkbBgAOHreabwZtDDtNDi3U_RAiOMvuRDTJiy0I",
         },
-        .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#37dad0cc4a527d9b8148db7b8bfce5cc3670e3fa",
-            .hash = "scripty-0.1.0-LKK5O93AAAAsHaPH44imnLqQ9dKHj-y-jOapdwBe4Dxs",
-        },
         .gfm = .{
-            .url = "git+https://github.com/kristoff-it/cmark-gfm#3647f8c6f15b8ea44e1687058c78736a11dd19a2",
-            .hash = "N-V-__8AABeYFwCrZlnYw9s48oZQVzNOySJe4a3S7DJwhILZ",
+            .url = "git+https://github.com/kristoff-it/cmark-gfm#675efb13f41f1dcaebfa0e9dc42d9b504e4b5508",
+            .hash = "N-V-__8AAAyYFwBMxWQCepH-NgMp6xo8gVqjRQ1lMPQnzYG9",
+        },
+        .tracy = .{
+            .url = "git+https://github.com/kristoff-it/tracy#67d2d89e351048c76fc6d161e0ac09d8a831dc60",
+            .hash = "tracy-0.0.0-4Xw-1pwwAABTfMgoDP1unCbZDZhJEfict7XCBGF6IdIn",
+        },
+        .scripty = .{
+            .url = "git+https://github.com/kristoff-it/scripty#57056571abcc6fe69fcb171c10b0c9e5962f53b0",
+            .hash = "scripty-0.1.0-LKK5O9jDAADwZbkwkzYcmtTD3xIStr1SNYWL0kcGf8sk",
+        },
+        .superhtml = .{
+            .url = "git+https://github.com/kristoff-it/superhtml#bf6443fb272808b350d2e0399b8e66cc2427b4e6",
+            .hash = "superhtml-0.4.0-Y7MdPFiWDQByHzU1USAv_rKVdWQZ5-Q527Cgipfo0zPL",
         },
     },
     .paths = .{"."},

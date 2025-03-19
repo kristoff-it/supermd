@@ -166,6 +166,8 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
+            if (pathValidationError(page_asset)) |err| return err;
+
             @field(self, "src") = .{ .page_asset = page_asset };
             return .{ .directive = d };
         }
@@ -197,6 +199,8 @@ pub const SrcBuiltins = struct {
             if (self.src != null) {
                 return .{ .err = "field already set" };
             }
+
+            if (pathValidationError(site_asset)) |err| return err;
 
             @field(self, "src") = .{ .site_asset = site_asset };
             return .{ .directive = d };
@@ -280,10 +284,12 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
+            if (pathValidationError(ref)) |err| return err;
+
             self.src = .{
                 .page = .{
                     .kind = .absolute,
-                    .ref = ref,
+                    .ref = stripTrailingSlash(ref),
                     .locale = code,
                 },
             };
@@ -326,10 +332,12 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
+            if (pathValidationError(ref)) |err| return err;
+
             @field(self, "src") = .{
                 .page = .{
                     .kind = .sub,
-                    .ref = ref,
+                    .ref = stripTrailingSlash(ref),
                     .locale = code,
                 },
             };
@@ -374,10 +382,12 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
+            if (pathValidationError(ref)) |err| return err;
+
             @field(self, "src") = .{
                 .page = .{
                     .kind = .sibling,
-                    .ref = ref,
+                    .ref = stripTrailingSlash(ref),
                     .locale = code,
                 },
             };
@@ -385,3 +395,49 @@ pub const SrcBuiltins = struct {
         }
     };
 };
+
+//NOTE: this must be kept in sync with SuperHTML
+pub fn pathValidationError(path: []const u8) ?context.Value {
+    // Paths must not have spaces around them
+    const spaces = std.mem.trim(u8, path, &std.ascii.whitespace);
+    if (spaces.len != path.len) return .{
+        .err = "remove whitespace surrounding path",
+    };
+
+    // Paths cannot be empty
+    if (path.len == 0) return .{
+        .err = "path is empty",
+    };
+
+    // All paths must be relative
+    if (path[0] == '/') return .{
+        .err = "path must be relative",
+    };
+
+    // Paths cannot contain Windows-style separators
+    if (std.mem.indexOfScalar(u8, path, '\\') != null) return .{
+        .err = "use '/' instead of '\\' in paths",
+    };
+
+    // Path cannot contain any relative component (. or ..)
+    var it = std.mem.splitScalar(u8, path, '/');
+    while (it.next()) |c| {
+        if (std.mem.eql(u8, c, ".") or
+            std.mem.eql(u8, c, "..")) return .{
+            .err = "'.' and '..' are not allowed in paths",
+        };
+
+        if (c.len == 0) {
+            if (it.next() != null) return .{
+                .err = "empty component in path",
+            };
+        }
+    }
+
+    return null;
+}
+
+pub fn stripTrailingSlash(path: []const u8) []const u8 {
+    if (path[path.len - 1] == '/') return path[0 .. path.len - 1];
+    return path;
+}

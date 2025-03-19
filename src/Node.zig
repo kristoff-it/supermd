@@ -201,3 +201,17 @@ pub fn unlink(n: Node) void {
 pub fn renderPlaintext(n: Node) ![]const u8 {
     return std.mem.span(c.cmark_render_plaintext(n.n, 0, 0) orelse return error.OutOfMemory);
 }
+
+pub fn isTableHeader(n: Node) bool {
+    std.debug.assert(@intFromEnum(n.nodeType()) == c.CMARK_NODE_TABLE_ROW);
+    return c.cmark_gfm_extensions_get_table_row_is_header(n.n) == 1;
+}
+
+pub fn getTableAlignments(n: Node) []const u8 {
+    std.debug.assert(@intFromEnum(n.nodeType()) == c.CMARK_NODE_TABLE);
+    const len = c.cmark_gfm_extensions_get_table_columns(n.n);
+    const ptr = c.cmark_gfm_extensions_get_table_alignments(n.n) orelse {
+        return &.{};
+    };
+    return ptr[0..len];
+}

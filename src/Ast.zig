@@ -6,6 +6,7 @@ const ziggy = @import("ziggy");
 const scripty = @import("scripty");
 const superhtml = @import("superhtml");
 const supermd = @import("root.zig");
+const utils = @import("context/utils.zig");
 const html = superhtml.html;
 const c = supermd.c;
 const Node = @import("Node.zig");
@@ -472,7 +473,10 @@ const Parser = struct {
                     .kind = .{
                         .link = .{
                             .src = .{
-                                .page = .{ .ref = src[1..], .kind = .sub },
+                                .page = .{
+                                    .ref = utils.stripTrailingSlash(src[2..]),
+                                    .kind = .sub,
+                                },
                             },
                         },
                     },

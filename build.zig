@@ -7,22 +7,40 @@ pub fn build(b: *std.Build) !void {
 
     const tsan = b.option(
         bool,
-        "sanitize-thread",
+        "tsan",
         "enable thread sanitizer for cmark-gfm",
     ) orelse false;
 
-    const scripty = b.dependency("scripty", .{});
+    const enable_tracy = b.option(
+        bool,
+        "tracy",
+        "Enable Tracy profiling",
+    ) orelse false;
 
-    const superhtml = b.dependency("superhtml", .{});
+    const tracy = b.dependency("tracy", .{ .enable = enable_tracy });
+    const scripty = b.dependency("scripty", .{
+        .target = target,
+        .optimize = optimize,
+        .tracy = enable_tracy,
+    });
+
+    const superhtml = b.dependency("superhtml", .{
+        .target = target,
+        .optimize = optimize,
+        .tracy = enable_tracy,
+    });
+
     const ziggy = b.dependency("ziggy", .{}).module("ziggy");
     const gfm = b.dependency("gfm", .{
         .target = target,
         .optimize = optimize,
-        .@"sanitize-thread" = tsan,
+        .tsan = tsan,
     });
 
     const supermd = b.addModule("supermd", .{
         .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
         .link_libc = true,
         .sanitize_thread = tsan,
     });
@@ -30,6 +48,7 @@ pub fn build(b: *std.Build) !void {
     supermd.addImport("scripty", scripty.module("scripty"));
     supermd.addImport("superhtml", superhtml.module("superhtml"));
     supermd.addImport("ziggy", ziggy);
+    supermd.addImport("tracy", tracy.module("tracy"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
 
@@ -45,10 +64,7 @@ pub fn build(b: *std.Build) !void {
     b.installArtifact(docgen);
 
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .sanitize_thread = tsan,
+        .root_module = supermd,
     });
     unit_tests.root_module.addImport("scripty", scripty.module("scripty"));
     unit_tests.root_module.addImport("superhtml", superhtml.module("superhtml"));

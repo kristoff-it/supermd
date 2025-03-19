@@ -1,0 +1,18 @@
+---
+.foo = @date("arst"),
+---
+
+# Test
+
+```ziggy
+.bar = 123,
+```
+
+```ziggy-schema
+root = foo
+
+@date = "arst",
+
+struct Foo {
+    date: @date,
+}
