@@ -168,7 +168,7 @@ pub const SrcBuiltins = struct {
 
             if (pathValidationError(page_asset)) |err| return err;
 
-            @field(self, "src") = .{ .page_asset = page_asset };
+            @field(self, "src") = .{ .page_asset = .{ .ref = page_asset } };
             return .{ .directive = d };
         }
     };
@@ -202,7 +202,7 @@ pub const SrcBuiltins = struct {
 
             if (pathValidationError(site_asset)) |err| return err;
 
-            @field(self, "src") = .{ .site_asset = site_asset };
+            @field(self, "src") = .{ .site_asset = .{ .ref = site_asset } };
             return .{ .directive = d };
         }
     };
@@ -233,7 +233,7 @@ pub const SrcBuiltins = struct {
                 return .{ .err = "field already set" };
             }
 
-            @field(self, "src") = .{ .build_asset = build_asset };
+            @field(self, "src") = .{ .build_asset = .{ .ref = build_asset } };
             return .{ .directive = d };
         }
     };

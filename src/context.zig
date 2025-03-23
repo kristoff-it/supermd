@@ -650,7 +650,7 @@ pub const Link = struct {
         const self = &d.kind.link;
         if (self.ref != null or self.alternative != null) {
             if (self.src == null) {
-                self.src = .self_page;
+                self.src = .{ .self_page = null };
             } else if (self.src.? != .self_page and self.src.? != .page) {
                 return .{
                     .err = "`ref` and `alternative` can only be specified when linking to a content page",
@@ -826,7 +826,7 @@ pub const Code = struct {
 pub const Src = union(enum) {
     // External link
     url: []const u8,
-    self_page,
+    self_page: ?[]const u8, // resolved alt if present
     page: struct {
         kind: enum {
             absolute,
@@ -835,8 +835,24 @@ pub const Src = union(enum) {
         },
         ref: []const u8,
         locale: ?[]const u8 = null,
+        resolved: struct {
+            page_id: u32,
+            variant_id: u32,
+            path: u32,
+            alt: ?[]const u8 = null,
+        } = undefined,
     },
-    page_asset: []const u8,
-    site_asset: []const u8,
-    build_asset: []const u8,
+    page_asset: AssetData,
+    site_asset: AssetData,
+    build_asset: struct {
+        ref: []const u8,
+    },
+
+    const AssetData = struct {
+        ref: []const u8,
+        resolved: struct {
+            path: u32,
+            name: u32,
+        } = undefined,
+    };
 };

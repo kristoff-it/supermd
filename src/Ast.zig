@@ -352,7 +352,7 @@ const Parser = struct {
                             var d: Directive = .{
                                 .kind = .{
                                     .image = .{
-                                        .src = .{ .site_asset = src[1..] },
+                                        .src = .{ .site_asset = .{ .ref = src[1..] } },
                                         .alt = n.title(),
                                     },
                                 },
@@ -388,7 +388,7 @@ const Parser = struct {
                             var d: Directive = .{
                                 .kind = .{
                                     .image = .{
-                                        .src = .{ .page_asset = clean_src },
+                                        .src = .{ .page_asset = .{ .ref = clean_src } },
                                         .alt = n.title(),
                                     },
                                 },
@@ -450,7 +450,7 @@ const Parser = struct {
                     .kind = .{
                         .link = .{
                             .ref = src[1..],
-                            .src = .self_page,
+                            .src = .{ .self_page = null },
                         },
                     },
                 };
