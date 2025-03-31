@@ -11,6 +11,7 @@ pub const Content = struct {
     block: Directive = .{ .kind = .{ .block = .{} } },
     heading: Directive = .{ .kind = .{ .heading = .{} } },
     text: Directive = .{ .kind = .{ .text = .{} } },
+    katex: Directive = .{ .kind = .{ .katex = .{} } },
     link: Directive = .{ .kind = .{ .link = .{} } },
     code: Directive = .{ .kind = .{ .code = .{} } },
     image: Directive = .{ .kind = .{ .image = .{} } },
@@ -130,6 +131,7 @@ pub const Directive = struct {
         link: Link,
         code: Code,
         text: Text,
+        katex: Katex,
         // sound: struct {
         //     id: ?[]const u8 = null,
         //     attrs: ?[]const []const u8 = null,
@@ -427,6 +429,54 @@ pub const Text = struct {
 
         const text = ctx.firstChild().?.literal() orelse return err;
         if (text.len == 0) return err;
+
+        return null;
+    }
+};
+
+pub const Katex = struct {
+    formula: []const u8 = "",
+
+    pub const Builtins = struct {};
+    pub const description =
+        \\Outputs the given LaTeX formula as a script tag that can be rendered
+        \\at runtime by [Katex](https://katex.org). Note that the formula must
+        \\be enclosed in backticks to avoid collisions with SuperMD.
+        \\
+        \\To render math formulas as separate blocks, use this syntax:
+        \\
+        \\    ```=katex
+        \\    x+\sqrt{1-x^2}
+        \\    ```
+        \\
+        \\Example:
+        \\```markdown
+        \\Here's some [`x+\sqrt{1-x^2}`]($katex) math. 
+        \\```
+        \\
+        \\This will be rendered by SuperHTML as:
+        \\```html
+        \\Here's some <script type="math/tex">x+\sqrt{1-x^2}</script> math.
+        \\```
+        \\
+        \\It's then the user's responsibility to wire in the necessary Katex JS/CSS
+        \\dependencies to obtain runtime rendering of math formulas. Note that
+        \\you will need also [this extension](https://github.com/KaTeX/KaTeX/tree/main/contrib/mathtex-script-type) alongside the core Katex dependencies.
+        \\
+    ;
+
+    pub fn validate(_: Allocator, d: *Directive, ctx: Node) !?Value {
+        const err: Value = .{
+            .err = "katex directive must contain a LaTeX math formula enclosed in backtics",
+        };
+
+        const content = ctx.firstChild().?;
+        if (content.nodeType() != .CODE) return err;
+        const text = content.literal() orelse return err;
+        if (text.len == 0) return err;
+
+        d.kind.katex.formula = text;
+        content.unlink();
 
         return null;
     }
