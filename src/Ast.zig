@@ -125,7 +125,14 @@ pub fn init(
         .HEADING => try p.analyzeHeading(n),
         .THEMATIC_BREAK => {},
         .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
-        else => {},
+        else => |nt| if (@intFromEnum(nt) == c.CMARK_NODE_STRIKETHROUGH) {
+            unreachable; // can't be a block level node
+        } else if (@intFromEnum(nt) == c.CMARK_NODE_TABLE) {
+            try p.analyzeTable(n);
+        } else std.debug.panic(
+            "TODO: implement support for {x}",
+            .{n.nodeType()},
+        ),
     };
 
     for (p.referenced_ids.keys()) |k| {
@@ -213,6 +220,24 @@ const Parser = struct {
         }
 
         try p.analyzeSiblings(next, h);
+    }
+
+    pub fn analyzeTable(p: *Parser, table: Node) !void {
+        std.debug.print("table\n", .{});
+        var row = table.firstChild();
+        while (row) |r| : (row = r.nextSibling()) {
+            std.debug.print("  row\n", .{});
+            var cell = r.firstChild();
+            while (cell) |cl| : (cell = cl.nextSibling()) {
+                std.debug.print("     cell ({})\n", .{cl.firstChild().?.nodeType()});
+                var ch = cl.firstChild();
+                while (ch) |cc| : (ch = cc.nextSibling()) {
+                    std.debug.print("       {}\n", .{cc.nodeType()});
+                }
+
+                try p.analyzeSiblings(cl.firstChild(), r);
+            }
+        }
     }
 
     pub fn analyzeParagraph(p: *Parser, block: Node) !void {
@@ -426,7 +451,9 @@ const Parser = struct {
                         },
                     }
                 },
-                else => continue,
+                else => if (@intFromEnum(kind) == c.CMARK_NODE_TABLE) {
+                    try p.analyzeTable(n);
+                } else continue,
             }
         }
     }
