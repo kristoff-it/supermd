@@ -28,6 +28,7 @@ pub const Content = struct {
         pub const block = Block.description;
         pub const heading = Heading.description;
         pub const text = Text.description;
+        pub const katex = Katex.description;
         pub const link = Link.description;
         pub const code = Code.description;
         pub const image = Image.description;
