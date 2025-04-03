@@ -19,9 +19,10 @@ pub const Content = struct {
 
     pub const dot = scripty.defaultDot(Content, Value, true);
     pub const description =
-        \\The Scripty global scope in SuperMD gives you access
-        \\to the various kind of rendering directives that can be
-        \\used in SuperMD files.
+        \\The Scripty global scope in SuperMD gives you access to various
+        \\rendering directives. Rendering directives allow you to define
+        \\embedded assets, give attributes to text, define content sections
+        \\that can be rendered individually, and more.
     ;
     pub const Fields = struct {
         pub const section = Section.description;

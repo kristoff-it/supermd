@@ -223,18 +223,10 @@ const Parser = struct {
     }
 
     pub fn analyzeTable(p: *Parser, table: Node) !void {
-        std.debug.print("table\n", .{});
         var row = table.firstChild();
         while (row) |r| : (row = r.nextSibling()) {
-            std.debug.print("  row\n", .{});
             var cell = r.firstChild();
             while (cell) |cl| : (cell = cl.nextSibling()) {
-                std.debug.print("     cell ({})\n", .{cl.firstChild().?.nodeType()});
-                var ch = cl.firstChild();
-                while (ch) |cc| : (ch = cc.nextSibling()) {
-                    std.debug.print("       {}\n", .{cc.nodeType()});
-                }
-
                 try p.analyzeSiblings(cl.firstChild(), r);
             }
         }
