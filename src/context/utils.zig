@@ -426,7 +426,7 @@ pub const CodeBuiltins = struct {
                 else => return bad_arg,
             };
 
-            const end = switch (args[0]) {
+            const end = switch (args[1]) {
                 .int => |i| i,
                 else => return bad_arg,
             };
@@ -438,7 +438,7 @@ pub const CodeBuiltins = struct {
             }
             @field(self, "lines") = .{
                 .start = @intCast(start),
-                .end = @intCast(start),
+                .end = @intCast(end),
             };
             return .{ .directive = d };
         }
