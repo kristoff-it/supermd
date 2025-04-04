@@ -404,7 +404,7 @@ pub const CodeBuiltins = struct {
         };
         pub const description =
             \\ Limit the included code asset to the specified lines.
-            \\ The end is inclusize.
+            \\ The second argument is inclusive.
             \\
             \\ ```
             \\ []($code.asset("main.zig").lines(10, 15))
