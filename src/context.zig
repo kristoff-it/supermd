@@ -851,6 +851,12 @@ pub const Link = struct {
 pub const Code = struct {
     src: ?Src = null,
     language: ?[]const u8 = null,
+    lines: ?Lines = null,
+
+    pub const Lines = struct {
+        start: usize,
+        end: usize,
+    };
 
     pub const mandatory = .{.src};
     pub const directive_mandatory = .{};
@@ -872,6 +878,7 @@ pub const Code = struct {
             \\Sets the language of this code snippet, which is also used for
             \\syntax highlighting.
         );
+        pub const lines = utils.CodeBuiltins.lines;
     };
 };
 
