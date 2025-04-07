@@ -415,8 +415,8 @@ const Parser = struct {
                     }
                 },
                 .LINK => {
-                    const src = n.link() orelse return;
-                    const directive = try p.runScript(n, src) orelse return;
+                    const src = n.link() orelse continue;
+                    const directive = try p.runScript(n, src) orelse continue;
                     switch (directive.kind) {
                         else => {
                             if (directive.id) |id| {

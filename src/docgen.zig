@@ -91,15 +91,32 @@ pub const Reference = struct {
         _ = fmt;
         _ = options;
 
-        try out_stream.print("# [Global Scope]($section.id('global'))\n\n", .{});
+        {
+            try out_stream.print("[]($section.id('menu'))\n\n", .{});
+            try out_stream.print("># [Directives]($block.collapsible(true))\n", .{});
+            for (r.global) |f| {
+                try out_stream.print(
+                    \\>- [`${0s}`]($link.unsafeRef("${0s}"))
+                    \\
+                , .{
+                    f.name,
+                });
+            }
+
+            try printTypeSidebar(out_stream, r.directive);
+
+            for (r.kinds) |v| try printTypeSidebar(out_stream, v);
+        }
+        try out_stream.print("# [Directives]($section.id('directives'))\n\n", .{});
         for (r.global) |f| {
             try out_stream.print(
-                \\## `${s}` : {s}
+                \\## [`${s}`]($text.id("${s}")) : {s}
                 \\
                 \\{s}
                 \\
                 \\
             , .{
+                f.name,
                 f.name,
                 f.type_name.link(false),
                 f.description,
@@ -111,6 +128,30 @@ pub const Reference = struct {
         for (r.kinds) |v| try printType(out_stream, v);
     }
 };
+
+fn printTypeSidebar(out_stream: anytype, v: Reference.Type) !void {
+    try out_stream.print(
+        \\
+        \\># [{0s}]($block.collapsible(false))
+        \\>- [`description`]($link.ref("{0s}"))
+        \\
+    , .{
+        v.name.string(false),
+    });
+
+    for (v.builtins) |b| {
+        try out_stream.print(
+            \\>- [`fn {s}()`]($link.ref("{s}.{s}")) 
+            \\
+        , .{
+            b.name,
+
+            // Type.Function
+            v.name.string(false),
+            b.name,
+        });
+    }
+}
 
 fn printType(out_stream: anytype, v: Reference.Type) !void {
     try out_stream.print(
@@ -163,7 +204,7 @@ fn printType(out_stream: anytype, v: Reference.Type) !void {
 
             b.signature,
             b.description,
-            // b.examples,
+                // b.examples,
         });
     }
 }

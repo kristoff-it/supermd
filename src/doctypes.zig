@@ -41,6 +41,7 @@ pub const ScriptyParam = union(enum) {
     Code,
     str,
     bool,
+    int,
     err,
     Many: Base,
     Opt: Base,
@@ -153,6 +154,7 @@ pub const ScriptyParam = union(enum) {
             },
             .str,
             .bool,
+            .int,
             => {
                 return @tagName(p);
             },

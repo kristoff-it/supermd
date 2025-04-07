@@ -516,7 +516,15 @@ pub const Heading = struct {
 };
 
 pub const Block = struct {
-    pub const Builtins = struct {};
+    collapsible: ?bool = null,
+
+    pub const Builtins = struct {
+        pub const collapsible = utils.directiveBuiltin("collapsible", .bool,
+            \\Render the block as a collapsible element. The argument defines
+            \\if the block should be open by default or not.
+        );
+    };
+
     pub const description =
         \\When placed at the beginning of a Markdown quote block, the quote 
         \\block becomes a styleable container for elements.
