@@ -49,7 +49,10 @@ pub const Error = struct {
         no_alt_in_links,
         expression_in_image_syntax,
         empty_expression,
-        duplicate_id,
+        duplicate_id: struct {
+            id: []const u8,
+            original: Node,
+        },
 
         scripty: struct {
             span: Span,
@@ -165,6 +168,21 @@ const Parser = struct {
     footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
     vm: ScriptyVM = .{},
 
+    pub fn addId(p: *Parser, id: []const u8, n: Node) !void {
+        const gop = try p.ids.getOrPut(p.gpa, id);
+        if (gop.found_existing) {
+            try p.addError(n.range(), .{
+                .duplicate_id = .{
+                    .id = id,
+                    .original = gop.value_ptr.*,
+                },
+            });
+            return;
+        }
+
+        gop.value_ptr.* = n;
+    }
+
     pub fn analyzeHeading(p: *Parser, h: Node) !void {
         const link = h.firstChild() orelse return;
 
@@ -175,16 +193,21 @@ const Parser = struct {
             const src = link.link() orelse break :blk;
             const directive = try p.runScript(link, src) orelse break :blk;
             switch (directive.kind) {
-                else => break :blk,
+                else => {
+                    if (directive.id) |id| try p.addId(id, h);
+                    break :blk;
+                },
                 .block => {
                     // try p.addError(
                     //     link.range(),
                     //     .must_be_first_under_blockquote,
                     // );
+                    //
+
                     return;
                 },
                 .heading => {
-                    if (directive.id) |id| try p.ids.put(p.gpa, id, h);
+                    if (directive.id) |id| try p.addId(id, h);
                     _ = try h.setDirective(p.gpa, directive, false);
                 },
                 .section => |sect| {
@@ -198,7 +221,7 @@ const Parser = struct {
                         return;
                     };
 
-                    try p.ids.put(p.gpa, id, h);
+                    try p.addId(id, h);
 
                     // Copies the directive.
                     _ = try h.setDirective(p.gpa, directive, true);
@@ -280,11 +303,11 @@ const Parser = struct {
             next = link.nextSibling() orelse para_or_h.nextSibling();
             const src = link.link() orelse break :blk;
             const directive = try p.runScript(link, src) orelse break :blk;
+            if (directive.id) |id| try p.addId(id, quote);
             switch (directive.kind) {
                 else => break :blk,
                 .block => {
                     _ = try quote.setDirective(p.gpa, directive, false);
-                    if (directive.id) |id| try p.ids.put(p.gpa, id, quote);
 
                     // link.unlink();
                     // const h1 = try Node.create(.HEADING);
@@ -306,7 +329,7 @@ const Parser = struct {
         if (!result.found_existing) {
             const def = footnoteRef.parentFootnoteDef().?;
             const def_id = try std.fmt.allocPrint(p.gpa, "fn-{d}", .{result.index + 1});
-            try p.ids.put(p.gpa, def_id, def);
+            try p.addId(def_id, def);
 
             const ref_ids = try p.gpa.alloc([]const u8, @intCast(def.footnoteDefCount()));
             for (ref_ids, 0..) |_, ref_idx| {
@@ -322,7 +345,7 @@ const Parser = struct {
 
         // cmark-gfm uses 1-based indices.
         const ref_id = result.value_ptr.*.ref_ids[@intCast(footnoteRef.footnoteRefIx() - 1)];
-        try p.ids.put(p.gpa, ref_id, footnoteRef);
+        try p.addId(ref_id, footnoteRef);
     }
     pub fn analyzeFootnoteDefinition(p: *Parser, footnote: Node) !void {
         try p.analyzeSiblings(footnote.firstChild(), footnote);
@@ -419,27 +442,13 @@ const Parser = struct {
                     const directive = try p.runScript(n, src) orelse continue;
                     switch (directive.kind) {
                         else => {
-                            if (directive.id) |id| {
-                                const gop = try p.ids.getOrPut(p.gpa, id);
-                                if (gop.found_existing) {
-                                    try p.addError(n.range(), .duplicate_id);
-                                } else {
-                                    gop.value_ptr.* = n;
-                                }
-                            }
+                            if (directive.id) |id| try p.addId(id, n);
                         },
                         .section, .heading => {
                             const parent = n.parent().?;
                             _ = try parent.setDirective(p.gpa, directive, false);
 
-                            if (directive.id) |id| {
-                                const gop = try p.ids.getOrPut(p.gpa, id);
-                                if (gop.found_existing) {
-                                    try p.addError(n.range(), .duplicate_id);
-                                } else {
-                                    gop.value_ptr.* = parent;
-                                }
-                            }
+                            if (directive.id) |id| try p.addId(id, parent);
                         },
                     }
                 },
