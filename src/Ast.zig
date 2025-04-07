@@ -128,6 +128,21 @@ pub fn init(
         .HEADING => try p.analyzeHeading(n),
         .THEMATIC_BREAK => {},
         .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
+
+        // Inlines
+        .TEXT,
+        .SOFTBREAK,
+        .LINEBREAK,
+        .CODE,
+        .HTML_INLINE,
+        .CUSTOM_INLINE,
+        .EMPH,
+        .STRONG,
+        .LINK,
+        .IMAGE,
+        .FOOTNOTE_REFERENCE,
+        => unreachable,
+
         else => |nt| if (@intFromEnum(nt) == c.CMARK_NODE_STRIKETHROUGH) {
             unreachable; // can't be a block level node
         } else if (@intFromEnum(nt) == c.CMARK_NODE_TABLE) {
@@ -443,6 +458,9 @@ const Parser = struct {
                     switch (directive.kind) {
                         else => {
                             if (directive.id) |id| try p.addId(id, n);
+                        },
+                        .katex => {
+                            current = n.nextSibling();
                         },
                         .section, .heading => {
                             const parent = n.parent().?;
