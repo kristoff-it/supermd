@@ -459,7 +459,7 @@ const Parser = struct {
                         else => {
                             if (directive.id) |id| try p.addId(id, n);
                         },
-                        .katex => {
+                        .mathtex => {
                             current = n.nextSibling();
                         },
                         .section, .heading => {

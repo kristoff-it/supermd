@@ -11,7 +11,7 @@ pub const Content = struct {
     block: Directive = .{ .kind = .{ .block = .{} } },
     heading: Directive = .{ .kind = .{ .heading = .{} } },
     text: Directive = .{ .kind = .{ .text = .{} } },
-    katex: Directive = .{ .kind = .{ .katex = .{} } },
+    mathtex: Directive = .{ .kind = .{ .mathtex = .{} } },
     link: Directive = .{ .kind = .{ .link = .{} } },
     code: Directive = .{ .kind = .{ .code = .{} } },
     image: Directive = .{ .kind = .{ .image = .{} } },
@@ -29,7 +29,7 @@ pub const Content = struct {
         pub const block = Block.description;
         pub const heading = Heading.description;
         pub const text = Text.description;
-        pub const katex = Katex.description;
+        pub const mathtex = Mathtex.description;
         pub const link = Link.description;
         pub const code = Code.description;
         pub const image = Image.description;
@@ -133,7 +133,7 @@ pub const Directive = struct {
         link: Link,
         code: Code,
         text: Text,
-        katex: Katex,
+        mathtex: Mathtex,
         // sound: struct {
         //     id: ?[]const u8 = null,
         //     attrs: ?[]const []const u8 = null,
@@ -436,24 +436,30 @@ pub const Text = struct {
     }
 };
 
-pub const Katex = struct {
+pub const Mathtex = struct {
     formula: []const u8 = "",
 
     pub const Builtins = struct {};
     pub const description =
         \\Outputs the given LaTeX formula as a script tag that can be rendered
-        \\at runtime by [Katex](https://katex.org). Note that the formula must
-        \\be enclosed in backticks to avoid collisions with SuperMD.
+        \\at runtime by JavaScript tools such as [Katex](https://katex.org),
+        \\[MathJax](https://www.mathjax.org/), [Temml](https://temml.org/), etc.
+        \\Note that the formula must be enclosed in backticks to avoid
+        \\collisions with SuperMD.
+        \\
+        \\This JS based solution is temporary. Zine will eventually implement
+        \\its own way of outputting MathML at buildtime so that clients won't 
+        \\need to have JS enabled.
         \\
         \\To render math formulas as separate blocks, use this syntax:
         \\
-        \\    ```=katex
+        \\    ```=mathtex
         \\    x+\sqrt{1-x^2}
         \\    ```
         \\
         \\Example:
         \\```markdown
-        \\Here's some [`x+\sqrt{1-x^2}`]($katex) math. 
+        \\Here's some [`x+\sqrt{1-x^2}`]($mathtex) math. 
         \\```
         \\
         \\This will be rendered by SuperHTML as:
@@ -461,15 +467,15 @@ pub const Katex = struct {
         \\Here's some <script type="math/tex">x+\sqrt{1-x^2}</script> math.
         \\```
         \\
-        \\It's then the user's responsibility to wire in the necessary Katex JS/CSS
-        \\dependencies to obtain runtime rendering of math formulas. Note that
-        \\you will need also [this extension](https://github.com/KaTeX/KaTeX/tree/main/contrib/mathtex-script-type) alongside the core Katex dependencies.
+        \\It's then the user's responsibility to wire in the necessary JS/CSS
+        \\dependencies to obtain runtime rendering of math formulas.
         \\
+        \\The Zine sample site shows a basic setup that uses Temml.
     ;
 
     pub fn validate(_: Allocator, d: *Directive, ctx: Node) !?Value {
         const err: Value = .{
-            .err = "katex directive must contain a LaTeX math formula enclosed in backtics",
+            .err = "mathtex directive must contain a LaTeX math formula enclosed in backtics",
         };
 
         const content = ctx.firstChild().?;
@@ -477,7 +483,7 @@ pub const Katex = struct {
         const text = content.literal() orelse return err;
         if (text.len == 0) return err;
 
-        d.kind.katex.formula = text;
+        d.kind.mathtex.formula = text;
         content.unlink();
 
         return null;
