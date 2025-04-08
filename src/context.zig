@@ -445,7 +445,7 @@ pub const Mathtex = struct {
         \\at runtime by JavaScript tools such as [Katex](https://katex.org),
         \\[MathJax](https://www.mathjax.org/), [Temml](https://temml.org/), etc.
         \\Note that the formula must be enclosed in backticks to avoid
-        \\collisions with SuperMD.
+        \\collisions with other SuperMD syntax.
         \\
         \\This JS based solution is temporary. Zine will eventually implement
         \\its own way of outputting MathML at buildtime so that clients won't 
@@ -596,11 +596,14 @@ pub const Block = struct {
             // - directly under a md quote block without any wrapped text
             //   (given how md works, it will be wrapped in a paragraph in
             //   this case)
-            .PARAGRAPH => switch (parent.parent().?.nodeType()) {
-                else => {},
-                .BLOCK_QUOTE => if (ctx.firstChild() != null) return .{
-                    .err = "block definitions directly under a quote block cannot embed any text. wrap it in a heading to define a heading block.",
-                } else return null,
+            .PARAGRAPH => {
+                if (parent.parent()) |pp| {
+                    if (pp.nodeType() == .BLOCK_QUOTE) {
+                        if (ctx.firstChild() != null) return .{
+                            .err = "block definitions directly under a quote block cannot embed any text. wrap it in a heading to define a heading block.",
+                        } else return null;
+                    }
+                }
             },
 
             // - inside of a md heading element which in turn is under a block
