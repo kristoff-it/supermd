@@ -669,7 +669,7 @@ pub const Image = struct {
         pub const size = struct {
             pub const signature: Signature = .{
                 .params = &.{ .int, .int },
-                .ret = .image,
+                .ret = .Image,
             };
             pub const description =
                 \\Sets the width and/or height of the image.

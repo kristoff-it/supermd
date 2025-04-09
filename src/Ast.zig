@@ -503,11 +503,15 @@ const Parser = struct {
                 return n.setDirective(p.gpa, &d, true);
             },
             '/' => {
+                var it = std.mem.tokenizeScalar(u8, src[1..], '#');
+                const path = utils.stripTrailingSlash(it.next().?);
+                const ref = it.next();
                 var d: Directive = .{
                     .kind = .{
                         .link = .{
+                            .ref = ref,
                             .src = .{
-                                .page = .{ .ref = src[1..], .kind = .absolute },
+                                .page = .{ .ref = path, .kind = .absolute },
                             },
                         },
                     },
@@ -515,12 +519,16 @@ const Parser = struct {
                 return n.setDirective(p.gpa, &d, true);
             },
             '.' => {
+                var it = std.mem.tokenizeScalar(u8, src[2..], '#');
+                const path = utils.stripTrailingSlash(it.next().?);
+                const ref = it.next();
                 var d: Directive = .{
                     .kind = .{
                         .link = .{
+                            .ref = ref,
                             .src = .{
                                 .page = .{
-                                    .ref = utils.stripTrailingSlash(src[2..]),
+                                    .ref = path,
                                     .kind = .sub,
                                 },
                             },
