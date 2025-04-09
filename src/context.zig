@@ -651,6 +651,67 @@ pub const Image = struct {
             \\Wraps the image in a link to itself.
         );
 
+        pub const size = struct {
+            pub const signature: Signature = .{
+                .params = &.{ .int, .int },
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\Sets the width and/or height of the image.
+                \\
+                \\When both dimensions are non-zero, the image will be resized to exactly those dimensions:
+                \\```markdown
+                \\[Image caption]($image.asset('example.jpg').size(800, 600))
+                \\```
+                \\
+                \\To specify width while maintaining aspect ratio, set height to 0:
+                \\```markdown
+                \\[Image caption]($image.asset('example.jpg').size(800, 0))
+                \\```
+                \\
+                \\To specify height while maintaining aspect ratio, set width to 0:
+                \\```markdown
+                \\[Image caption]($image.asset('example.jpg').size(0, 600))
+                \\```
+            ;
+            pub fn call(
+                self: *Image,
+                d: *Directive,
+                _: Allocator,
+                _: *const Content,
+                args: []const Value,
+            ) !Value {
+                const bad_arg: Value = .{ .err = "expected 2 integer arguments" };
+                if (args.len != 2) return bad_arg;
+
+                const width = switch (args[0]) {
+                    .int => |i| i,
+                    else => return bad_arg,
+                };
+
+                const height = switch (args[1]) {
+                    .int => |i| i,
+                    else => return bad_arg,
+                };
+
+                if (self.size != null) {
+                    return .{ .err = "size already set" };
+                }
+
+                if (width == 0 and height == 0) {
+                    return .{ .err = "at least one dimension must be non-zero" };
+                }
+
+                // For symmetry, treat both width=0 and height=0 as "auto"
+                // Use -1 as the internal marker for "auto"
+                self.size = .{
+                    .w = if (width == 0) -1 else width, 
+                    .h = if (height == 0) -1 else height,
+                };
+                return .{ .directive = d };
+            }
+        };
+
         pub const url = utils.SrcBuiltins.url;
         pub const asset = utils.SrcBuiltins.asset;
         pub const siteAsset = utils.SrcBuiltins.siteAsset;
