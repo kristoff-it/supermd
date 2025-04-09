@@ -396,55 +396,6 @@ pub const SrcBuiltins = struct {
     };
 };
 
-pub const CodeBuiltins = struct {
-    pub const lines = struct {
-        pub const signature: Signature = .{
-            .params = &.{ .int, .int },
-            .ret = .anydirective,
-        };
-        pub const description =
-            \\ Limit the included code asset to the specified lines.
-            \\ The second argument is inclusive.
-            \\
-            \\ ```
-            \\ []($code.asset("main.zig").lines(10, 15))
-            \\ ```
-            \\ This will include only lines 10 - 15 from the main.zig asset file.
-        ;
-        pub fn call(
-            self: anytype,
-            d: *context.Directive,
-            _: Allocator,
-            _: *const context.Content,
-            args: []const context.Value,
-        ) !context.Value {
-            const bad_arg: context.Value = .{ .err = "expected 2 integer arguments" };
-            if (args.len != 2) return bad_arg;
-
-            const start = switch (args[0]) {
-                .int => |i| i,
-                else => return bad_arg,
-            };
-
-            const end = switch (args[1]) {
-                .int => |i| i,
-                else => return bad_arg,
-            };
-            const neg_arg: context.Value = .{ .err = "arg must be not negative" };
-            if (start < 0 or end < 0) return neg_arg;
-
-            if (self.lines != null) {
-                return .{ .err = "field already set" };
-            }
-            @field(self, "lines") = .{
-                .start = @intCast(start),
-                .end = @intCast(end),
-            };
-            return .{ .directive = d };
-        }
-    };
-};
-
 //NOTE: this must be kept in sync with SuperHTML
 pub fn pathValidationError(path: []const u8) ?context.Value {
     // Paths must not have spaces around them

@@ -586,6 +586,21 @@ pub const Block = struct {
         \\>This is now a block note.
         \\>Lorem ipsum.
         \\
+        \\
+        \\By calling `collapsible` you can generate `<details>` elements:
+        \\
+        \\
+        \\Example:
+        \\```markdown
+        \\># [Example]($block.collapsible(false))
+        \\>The title becomes the `<summary>` element!
+        \\>Lorem ipsum.
+        \\```
+        \\># [Example]($block.collapsible(false))
+        \\>The title becomes the `<summary>` element!
+        \\>Lorem ipsum.
+        \\
+        \\
     ;
 
     pub fn validate(gpa: Allocator, _: *Directive, ctx: Node) !?Value {
@@ -654,7 +669,7 @@ pub const Image = struct {
         pub const size = struct {
             pub const signature: Signature = .{
                 .params = &.{ .int, .int },
-                .ret = .anydirective,
+                .ret = .image,
             };
             pub const description =
                 \\Sets the width and/or height of the image.
@@ -673,6 +688,7 @@ pub const Image = struct {
                 \\```markdown
                 \\[Image caption]($image.asset('example.jpg').size(0, 600))
                 \\```
+                \\
             ;
             pub fn call(
                 self: *Image,
@@ -705,7 +721,7 @@ pub const Image = struct {
                 // For symmetry, treat both width=0 and height=0 as "auto"
                 // Use -1 as the internal marker for "auto"
                 self.size = .{
-                    .w = if (width == 0) -1 else width, 
+                    .w = if (width == 0) -1 else width,
                     .h = if (height == 0) -1 else height,
                 };
                 return .{ .directive = d };
@@ -956,7 +972,52 @@ pub const Code = struct {
             \\Sets the language of this code snippet, which is also used for
             \\syntax highlighting.
         );
-        pub const lines = utils.CodeBuiltins.lines;
+        pub const lines = struct {
+            pub const signature: Signature = .{
+                .params = &.{ .int, .int },
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\ Limit the included code asset to the specified lines.
+                \\ The second argument is inclusive.
+                \\
+                \\ ```
+                \\ []($code.asset("main.zig").lines(10, 15))
+                \\ ```
+                \\ This will include only lines 10 - 15 from the main.zig asset file.
+            ;
+            pub fn call(
+                self: anytype,
+                d: *Directive,
+                _: Allocator,
+                _: *const Content,
+                args: []const Value,
+            ) !Value {
+                const bad_arg: Value = .{ .err = "expected 2 integer arguments" };
+                if (args.len != 2) return bad_arg;
+
+                const start = switch (args[0]) {
+                    .int => |i| i,
+                    else => return bad_arg,
+                };
+
+                const end = switch (args[1]) {
+                    .int => |i| i,
+                    else => return bad_arg,
+                };
+                const neg_arg: Value = .{ .err = "arg must be not negative" };
+                if (start < 0 or end < 0) return neg_arg;
+
+                if (self.lines != null) {
+                    return .{ .err = "field already set" };
+                }
+                @field(self, "lines") = .{
+                    .start = @intCast(start),
+                    .end = @intCast(end),
+                };
+                return .{ .directive = d };
+            }
+        };
     };
 };
 
