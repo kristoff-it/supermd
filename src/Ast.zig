@@ -504,7 +504,7 @@ const Parser = struct {
             },
             '/' => {
                 var it = std.mem.tokenizeScalar(u8, src[1..], '#');
-                const path = utils.stripTrailingSlash(it.next().?);
+                const path = utils.stripTrailingSlash(it.next() orelse "");
                 const ref = it.next();
                 var d: Directive = .{
                     .kind = .{
@@ -520,7 +520,7 @@ const Parser = struct {
             },
             '.' => {
                 var it = std.mem.tokenizeScalar(u8, src[2..], '#');
-                const path = utils.stripTrailingSlash(it.next().?);
+                const path = utils.stripTrailingSlash(it.next() orelse "");
                 const ref = it.next();
                 var d: Directive = .{
                     .kind = .{
