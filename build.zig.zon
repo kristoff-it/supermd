@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.14.0-dev.3451+d8d2aa9af",
     .dependencies = .{
         .ziggy = .{
-            .url = "git+https://github.com/kristoff-it/ziggy#8a29017169f43dc2c3526817e98142eb9a335087",
-            .hash = "ziggy-0.1.0-kTg8vwkbBgAOHreabwZtDDtNDi3U_RAiOMvuRDTJiy0I",
+            .url = "git+https://github.com/kristoff-it/ziggy#eeb21acc0a369dca503167fe963f4f5a7eda2659",
+            .hash = "ziggy-0.1.0-kTg8vwBEBgA21d_qL5UmAoCr3bvnjkTRbF41tZzo2zuL",
         },
         .gfm = .{
             .url = "git+https://github.com/kristoff-it/cmark-gfm#675efb13f41f1dcaebfa0e9dc42d9b504e4b5508",
@@ -21,8 +21,8 @@
             .hash = "scripty-0.1.0-LKK5O9jDAADwZbkwkzYcmtTD3xIStr1SNYWL0kcGf8sk",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#bf6443fb272808b350d2e0399b8e66cc2427b4e6",
-            .hash = "superhtml-0.4.0-Y7MdPFiWDQByHzU1USAv_rKVdWQZ5-Q527Cgipfo0zPL",
+            .url = "git+https://github.com/kristoff-it/superhtml#015206b82b8706412c329d9531aa7e2fd35090f4",
+            .hash = "superhtml-0.4.0-Y7MdPI6YDQBVwww8L9pIBES63r-gfTUjz4kvpGb3Qqi4",
         },
     },
     .paths = .{"."},
