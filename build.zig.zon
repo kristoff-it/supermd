@@ -2,27 +2,27 @@
     .name = .supermd,
     .version = "0.1.0",
     .fingerprint = 0x23d062d1dc28c7dc,
-    .minimum_zig_version = "0.14.0-dev.3451+d8d2aa9af",
+    .minimum_zig_version = "0.15.0-dev.1034+bd97b6618",
     .dependencies = .{
-        .ziggy = .{
-            .url = "git+https://github.com/kristoff-it/ziggy#eeb21acc0a369dca503167fe963f4f5a7eda2659",
-            .hash = "ziggy-0.1.0-kTg8vwBEBgA21d_qL5UmAoCr3bvnjkTRbF41tZzo2zuL",
-        },
         .gfm = .{
-            .url = "git+https://github.com/kristoff-it/cmark-gfm#675efb13f41f1dcaebfa0e9dc42d9b504e4b5508",
-            .hash = "N-V-__8AAAyYFwBMxWQCepH-NgMp6xo8gVqjRQ1lMPQnzYG9",
+            .url = "git+https://github.com/kristoff-it/cmark-gfm#b96c27a5152b9124d657dee7fb1186d0a13c1fe4",
+            .hash = "cmark_gfm-0.1.0-uQgTK6WZFwCG9y7_Z0IkCINtmMTwvEZTyVh_6nsaMVPq",
         },
         .tracy = .{
             .url = "git+https://github.com/kristoff-it/tracy#67d2d89e351048c76fc6d161e0ac09d8a831dc60",
             .hash = "tracy-0.0.0-4Xw-1pwwAABTfMgoDP1unCbZDZhJEfict7XCBGF6IdIn",
         },
         .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#131704ebf9b3557c9480248787bd7b640a6ac98d",
-            .hash = "scripty-0.1.0-LKK5O83DAACoGpVDkm8JxzgevTE76bkf0n3mHyTej9nb",
+            .url = "git+https://github.com/kristoff-it/scripty#3d56bb62a1aec0b07b634aea42ec46e72e017e33",
+            .hash = "scripty-0.1.0-LKK5O2zEAADkO2rJa_QbMWwC_YmFnUKC384wwMeBGOQv",
+        },
+        .ziggy = .{
+            .url = "git+https://github.com/kristoff-it/ziggy#f3dcc37beab34478a67aa9680f581edb0bc4d482",
+            .hash = "ziggy-0.1.0-kTg8v9g9BgB0Tdid89m2yC7a-LtZB8sD3v4pWzHCp7MO",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#0b9bd0e8fd6284c0cfca85f7997535fe7f051046",
-            .hash = "superhtml-0.4.0-Y7MdPIOYDQAur5AdrA9FL0NNzR1yq-sWZ5bUD7yn6Wm4",
+            .url = "git+https://github.com/kristoff-it/superhtml#7fe755154454e5a19a267ec80de584d69e567eb4",
+            .hash = "superhtml-0.4.0-Y7MdPHOHDQAHN2ClxoryyUW8J2BKc2hij3Yu9aoUapI7",
         },
     },
     .paths = .{"."},

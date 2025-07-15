@@ -30,8 +30,9 @@ pub fn main() !void {
     };
     defer out_file.close();
 
-    var buf_writer = std.io.bufferedWriter(out_file.writer());
-    const w = buf_writer.writer();
+    var buf: [4096]u8 = undefined;
+    var writer = out_file.writer(&buf);
+    const w = &writer.interface;
 
     try w.writeAll(
         \\---
@@ -44,8 +45,8 @@ pub fn main() !void {
         \\---
         \\
     );
-    try w.print("{}", .{ref});
-    try buf_writer.flush();
+    try w.print("{f}", .{ref});
+    try w.flush();
 }
 
 fn fatal(comptime fmt: []const u8, args: anytype) noreturn {
@@ -84,13 +85,8 @@ pub const Reference = struct {
 
     pub fn format(
         r: Reference,
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
         out_stream: anytype,
     ) !void {
-        _ = fmt;
-        _ = options;
-
         {
             try out_stream.print("[]($section.id('menu'))\n\n", .{});
             try out_stream.print("># [Directives]($block.collapsible(true))\n", .{});
@@ -180,7 +176,7 @@ fn printType(out_stream: anytype, v: Reference.Type) !void {
 
     for (v.builtins) |b| {
         try out_stream.print(
-            \\### []($heading.id("{s}.{s}")) [`fn`]($link.ref("{s}.{s}")) {s} {s}
+            \\### []($heading.id("{s}.{s}")) [`fn`]($link.ref("{s}.{s}")) {s} {f}
             \\
             \\{s}
             \\

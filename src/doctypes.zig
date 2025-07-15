@@ -9,12 +9,8 @@ pub const Signature = struct {
 
     pub fn format(
         s: Signature,
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
         out_stream: anytype,
     ) !void {
-        _ = fmt;
-        _ = options;
         try out_stream.writeAll("(");
         for (s.params, 0..) |p, idx| {
             try out_stream.writeAll(p.link(true));

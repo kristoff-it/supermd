@@ -54,9 +54,11 @@ pub fn build(b: *std.Build) !void {
 
     const docgen = b.addExecutable(.{
         .name = "docgen",
-        .root_source_file = b.path("src/docgen.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/docgen.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     docgen.root_module.addImport("ziggy", ziggy);

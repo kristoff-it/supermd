@@ -734,12 +734,8 @@ fn cmark(src: []const u8) CMarkAst {
 
 pub fn format(
     a: Ast,
-    comptime fmt: []const u8,
-    options: std.fmt.FormatOptions,
     w: anytype,
 ) !void {
-    _ = fmt;
-    _ = options;
     for (a.errors, 0..) |e, i| {
         try w.print("errors[{}] = '{s}' {s} \n", .{
             i, @tagName(e.kind), switch (e.kind) {
@@ -785,7 +781,7 @@ test "basics" {
     c.cmark_gfm_core_extensions_ensure_registered();
     const ast = try Ast.init(std.testing.allocator, case, .default());
     defer ast.deinit(std.testing.allocator);
-    try std.testing.expectFmt(expected, "{}", .{ast});
+    try std.testing.expectFmt(expected, "{f}", .{ast});
 }
 
 test "image" {
@@ -805,5 +801,5 @@ test "image" {
     c.cmark_gfm_core_extensions_ensure_registered();
     const ast = try Ast.init(std.testing.allocator, case, .default());
     defer ast.deinit(std.testing.allocator);
-    try std.testing.expectFmt(expected, "{}", .{ast});
+    try std.testing.expectFmt(expected, "{f}", .{ast});
 }
