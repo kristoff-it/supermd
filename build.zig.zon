@@ -21,8 +21,8 @@
             .hash = "ziggy-0.1.0-kTg8v9g9BgB0Tdid89m2yC7a-LtZB8sD3v4pWzHCp7MO",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#c284fcc98d2ce65ef04fe04b0adedcf861f4d86a",
-            .hash = "superhtml-0.4.0-Y7MdPFCGDQARMyebQdoxuDlIfbH_ovKBDwc_FNNdJuY7",
+            .url = "git+https://github.com/kristoff-it/superhtml#a67317fb81afe76cc04e6d92124cfc20a903cee7",
+            .hash = "superhtml-0.4.0-Y7MdPFOGDQDNOWo-h4o8yNvX8Iys3JqU-uYBka837Ls5",
         },
     },
     .paths = .{"."},
