@@ -1,8 +1,11 @@
 const std = @import("std");
+const Writer = std.Io.Writer;
+
 const context = @import("context.zig");
-const doctypes = @import("doctypes.zig");
 const Value = context.Value;
 const Content = context.Content;
+
+const doctypes = @import("doctypes.zig");
 const Param = doctypes.ScriptyParam;
 const Signature = doctypes.Signature;
 
@@ -85,7 +88,7 @@ pub const Reference = struct {
 
     pub fn format(
         r: Reference,
-        out_stream: anytype,
+        out_stream: *Writer,
     ) !void {
         {
             try out_stream.print("[]($section.id('menu'))\n\n", .{});
@@ -125,7 +128,7 @@ pub const Reference = struct {
     }
 };
 
-fn printTypeSidebar(out_stream: anytype, v: Reference.Type) !void {
+fn printTypeSidebar(out_stream: *Writer, v: Reference.Type) !void {
     try out_stream.print(
         \\
         \\># [{0s}]($block.collapsible(false))
@@ -149,7 +152,7 @@ fn printTypeSidebar(out_stream: anytype, v: Reference.Type) !void {
     }
 }
 
-fn printType(out_stream: anytype, v: Reference.Type) !void {
+fn printType(out_stream: *Writer, v: Reference.Type) !void {
     try out_stream.print(
         \\# [{s}]($section.id('{s}'))
         \\

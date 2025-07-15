@@ -1,6 +1,7 @@
 const std = @import("std");
-const context = @import("../context.zig");
 const Allocator = std.mem.Allocator;
+
+const context = @import("../context.zig");
 const Signature = @import("../doctypes.zig").Signature;
 
 // Redirects calls from the outer Directive to inner Kinds

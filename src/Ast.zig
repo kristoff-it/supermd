@@ -1,22 +1,28 @@
 const Ast = @This();
 
 const std = @import("std");
+const Writer = std.Io.Writer;
+const Allocator = std.mem.Allocator;
+
 const builtin = @import("builtin");
 const ziggy = @import("ziggy");
 const scripty = @import("scripty");
+const ScriptyVM = scripty.VM(Content, Value);
+
 const superhtml = @import("superhtml");
-const supermd = @import("root.zig");
-const utils = @import("context/utils.zig");
 const html = superhtml.html;
+
+const supermd = @import("root.zig");
 const c = supermd.c;
-const Node = @import("Node.zig");
 const Span = supermd.Span;
 const Range = supermd.Range;
 const Value = supermd.Value;
 const Content = supermd.Content;
 const Directive = supermd.Directive;
-const Allocator = std.mem.Allocator;
-const ScriptyVM = scripty.VM(Content, Value);
+
+const utils = @import("context/utils.zig");
+const Node = @import("Node.zig");
+
 const log = std.log.scoped(.supermd);
 
 md: CMarkAst,
@@ -734,7 +740,7 @@ fn cmark(src: []const u8) CMarkAst {
 
 pub fn format(
     a: Ast,
-    w: anytype,
+    w: *Writer,
 ) !void {
     for (a.errors, 0..) |e, i| {
         try w.print("errors[{}] = '{s}' {s} \n", .{

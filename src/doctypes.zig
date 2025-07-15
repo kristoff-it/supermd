@@ -1,4 +1,6 @@
 const std = @import("std");
+const Writer = std.Io.Writer;
+
 const ziggy = @import("ziggy");
 const context = @import("context.zig");
 const Value = context.Value;
@@ -9,7 +11,7 @@ pub const Signature = struct {
 
     pub fn format(
         s: Signature,
-        out_stream: anytype,
+        out_stream: *Writer,
     ) !void {
         try out_stream.writeAll("(");
         for (s.params, 0..) |p, idx| {
