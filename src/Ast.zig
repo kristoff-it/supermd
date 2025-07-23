@@ -443,6 +443,7 @@ const Parser = struct {
                                     },
                                 };
                                 _ = try n.setDirective(p.gpa, &d, true);
+                                return;
                             }
 
                             const clean_src = if (std.mem.startsWith(u8, src, "./")) src[2..] else src;
