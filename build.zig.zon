@@ -2,7 +2,7 @@
     .name = .supermd,
     .version = "0.1.0",
     .fingerprint = 0x23d062d1dc28c7dc,
-    .minimum_zig_version = "0.15.0-dev.1034+bd97b6618",
+    .minimum_zig_version = "0.15.0-dev.1222+5fb36d260",
     .dependencies = .{
         .gfm = .{
             .url = "git+https://github.com/kristoff-it/cmark-gfm#b96c27a5152b9124d657dee7fb1186d0a13c1fe4",
@@ -21,8 +21,8 @@
             .hash = "ziggy-0.1.0-kTg8v9g9BgB0Tdid89m2yC7a-LtZB8sD3v4pWzHCp7MO",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#a67317fb81afe76cc04e6d92124cfc20a903cee7",
-            .hash = "superhtml-0.4.0-Y7MdPFOGDQDNOWo-h4o8yNvX8Iys3JqU-uYBka837Ls5",
+            .url = "git+https://github.com/kristoff-it/superhtml#5b5836eb8b06cf4acd62b8643075ac4791b90995",
+            .hash = "superhtml-0.4.0-Y7MdPLqGDQDl640LHYyOWlVOdu1XZHFP1a2eknxc_8u9",
         },
     },
     .paths = .{"."},
