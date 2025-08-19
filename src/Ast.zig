@@ -284,7 +284,7 @@ const Parser = struct {
         const fence = block.fenceInfo() orelse return;
         if (std.mem.startsWith(u8, fence, "=html")) {
             const src = block.literal() orelse return;
-            const ast = try html.Ast.init(p.gpa, src, .html);
+            const ast = try html.Ast.init(p.gpa, src, .html, false);
             defer ast.deinit(p.gpa);
             for (ast.errors) |err| {
                 const md_range = block.range();
