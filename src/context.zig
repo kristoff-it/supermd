@@ -786,6 +786,7 @@ pub const Link = struct {
     alternative: ?[]const u8 = null,
     ref: ?[]const u8 = null,
     ref_unsafe: bool = false,
+    rel: ?[]const u8 = null,
 
     new: ?bool = null,
 
@@ -936,6 +937,40 @@ pub const Link = struct {
 
                 self.ref = str;
                 self.ref_unsafe = true;
+                return .{ .directive = d };
+            }
+        };
+
+        pub const rel = struct {
+            pub const signature: Signature = .{
+                .params = &.{.str},
+                .ret = .anydirective,
+            };
+            pub const description =
+                \\Sets "rel" attribute.
+            ;
+
+            pub fn call(
+                self: *Link,
+                d: *Directive,
+                _: Allocator,
+                _: *const Content,
+                args: []const Value,
+            ) !Value {
+                const bad_arg: Value = .{ .err = "expected 1 string argument" };
+
+                if (args.len != 1) return bad_arg;
+
+                const str = switch (args[0]) {
+                    .string => |s| s,
+                    else => return bad_arg,
+                };
+
+                if (self.rel != null) {
+                    return .{ .err = "field already set" };
+                }
+
+                self.rel = str;
                 return .{ .directive = d };
             }
         };
