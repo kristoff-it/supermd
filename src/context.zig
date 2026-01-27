@@ -789,7 +789,7 @@ pub const Audio = struct {
     loop: ?bool = null,
     muted: ?bool = null,
     autoplay: ?bool = null,
-    controls: ?bool = null,
+    hide_controls: ?bool = null,
 
     pub const mandatory = .{.src};
     pub const directive_mandatory = .{};
@@ -815,8 +815,8 @@ pub const Audio = struct {
         pub const autoplay = utils.directiveBuiltin("autoplay", .bool,
             \\If true, the audio file will start playing automatically.
         );
-        pub const controls = utils.directiveBuiltin("controls", .bool,
-            \\If true, the audio file will display controls (e.g. play/pause,
+        pub const hide_controls = utils.directiveBuiltin("hide_controls", .bool,
+            \\If true, the audio file will hide its controls (e.g. play/pause,
             \\volume).
         );
 
