@@ -1,4 +1,5 @@
 const std = @import("std");
+const Io = std.Io;
 const Writer = std.Io.Writer;
 
 const context = @import("context.zig");
@@ -15,26 +16,23 @@ const ref: Reference = .{
     .kinds = analyzeKinds(),
 };
 
-pub fn main() !void {
-    var gpa_impl: std.heap.GeneralPurposeAllocator(.{}) = .{};
-    var arena_impl = std.heap.ArenaAllocator.init(gpa_impl.allocator());
-    defer arena_impl.deinit();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const arena = init.arena.allocator();
 
-    const arena = arena_impl.allocator();
-
-    const args = std.process.argsAlloc(arena) catch oom();
+    const args = try init.minimal.args.toSlice(arena);
     const out_path = args[1];
 
-    const out_file = std.fs.cwd().createFile(out_path, .{}) catch |err| {
+    const out_file = Io.Dir.cwd().createFile(io, out_path, .{}) catch |err| {
         fatal("error while creating output file: {s}\n{s}\n", .{
             out_path,
             @errorName(err),
         });
     };
-    defer out_file.close();
+    defer out_file.close(io);
 
     var buf: [4096]u8 = undefined;
-    var writer = out_file.writer(&buf);
+    var writer = out_file.writer(io, &buf);
     const w = &writer.interface;
 
     try w.writeAll(
@@ -203,7 +201,7 @@ fn printType(out_stream: *Writer, v: Reference.Type) !void {
 
             b.signature,
             b.description,
-                // b.examples,
+            // b.examples,
         });
     }
 }

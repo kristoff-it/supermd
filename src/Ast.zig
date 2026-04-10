@@ -1,8 +1,9 @@
 const Ast = @This();
 
 const std = @import("std");
-const Writer = std.Io.Writer;
 const Allocator = std.mem.Allocator;
+const Io = std.Io;
+const Writer = std.Io.Writer;
 
 const builtin = @import("builtin");
 const ziggy = @import("ziggy");
@@ -105,11 +106,7 @@ pub const CmarkParser = struct {
     }
 };
 
-pub fn init(
-    gpa: Allocator,
-    src: []const u8,
-    rcp: CmarkParser,
-) error{OutOfMemory}!Ast {
+pub fn init(gpa: Allocator, src: []const u8, rcp: CmarkParser) error{OutOfMemory}!Ast {
     var arena_impl = std.heap.ArenaAllocator.init(gpa);
     const arena = arena_impl.allocator();
 
@@ -183,7 +180,7 @@ pub fn init(
 
 const Parser = struct {
     gpa: Allocator,
-    errors: std.ArrayListUnmanaged(Error) = .{},
+    errors: std.ArrayList(Error) = .empty,
     ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     referenced_ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
@@ -747,7 +744,8 @@ pub fn format(
 ) !void {
     for (a.errors, 0..) |e, i| {
         try w.print("errors[{}] = '{s}' {s} \n", .{
-            i, @tagName(e.kind), switch (e.kind) {
+            i, @tagName(e.kind),
+            switch (e.kind) {
                 .scripty => |s| s.err,
                 else => "",
             },
