@@ -13,16 +13,20 @@
             .hash = "tracy-0.0.0-4Xw-1pwwAABTfMgoDP1unCbZDZhJEfict7XCBGF6IdIn",
         },
         .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#154779b47be67f766ee13080ce7aa68a18daebd9",
-            .hash = "scripty-0.1.0-LKK5OwTdAACftzrZyMpWZUJ7OLyI3UwAwqQfE2cdgRoO",
+            .url = "git+https://github.com/kristoff-it/scripty#4b815a13e2456e5552c7ce43759f69e40ffdc702",
+            .hash = "scripty-0.1.0-LKK5O7j0AABV5Y9oNimQCXTzFXPQ_ZPWivEcUGmeXJZB",
         },
         .ziggy = .{
             .url = "git+https://github.com/kristoff-it/ziggy?ref=old#0fdd57cbb052e7aa5930b3ed960ea3450f9dc2b0",
             .hash = "ziggy-0.1.0-kTg8v15ABgBGDedRmKfxGUWBxSxMBnEfYjazvZKVVrzP",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#248895ac07370464248d7af7b83213a3a80f510c",
-            .hash = "superhtml-0.6.2-Y7MdPCRFJACeDRBHLwVYloNaB9uSo3U6os3ZPyudlJLT",
+            .url = "git+https://github.com/kristoff-it/superhtml#32cff9e05c65904d557db94118b81e5b0d407208",
+            .hash = "superhtml-0.6.2-Y7MdPN1yJABtImZK-nuTEXnlynIfInhUBZenBhN5S4Qx",
+        },
+        .translate_c = .{
+            .url = "git+https://codeberg.org/ziglang/translate-c?ref=zig-0.16.x#42f630117deffd5318b4a6ceffbd366dd0af8cee",
+            .hash = "translate_c-1.0.0-Q_BUWo75BgBmrtWsRz9QVUZlzvsSUUe_IIXD9vmWguhX",
         },
     },
     .paths = .{"."},

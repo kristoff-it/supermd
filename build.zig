@@ -1,4 +1,6 @@
 const std = @import("std");
+const Translator = @import("translate_c").Translator;
+
 pub const Ast = struct {};
 
 pub fn build(b: *std.Build) !void {
@@ -37,6 +39,16 @@ pub fn build(b: *std.Build) !void {
         .tsan = tsan,
     });
 
+    const translate_c = b.dependency("translate_c", .{});
+    const t: Translator = .init(translate_c, .{
+        .c_source_file = b.path("src/c.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    t.linkLibrary(gfm.artifact("cmark-gfm"));
+    t.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
+
     const supermd = b.addModule("supermd", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
@@ -51,6 +63,7 @@ pub fn build(b: *std.Build) !void {
     supermd.addImport("tracy", tracy.module("tracy"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm"));
     supermd.linkLibrary(gfm.artifact("cmark-gfm-extensions"));
+    supermd.addImport("c", t.mod);
 
     const docgen = b.addExecutable(.{
         .name = "docgen",

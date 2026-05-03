@@ -1,12 +1,5 @@
 pub extern fn cmark_list_syntax_extensions([*c]c.cmark_mem) [*c]c.cmark_llist;
-pub const c = @cImport({
-    @cInclude("cmark-gfm.h");
-    @cInclude("cmark-gfm-core-extensions.h");
-    @cInclude("extensions/table.h");
-    @cInclude("extensions/autolink.h");
-    @cInclude("extensions/strikethrough.h");
-    @cInclude("extensions/tasklist.h");
-});
+pub const c = @import("c");
 
 pub const Ast = @import("Ast.zig");
 pub const Node = @import("Node.zig");

@@ -1,0 +1,6 @@
+#include "cmark-gfm-core-extensions.h"
+#include "cmark-gfm.h"
+#include "extensions/autolink.h"
+#include "extensions/strikethrough.h"
+#include "extensions/table.h"
+#include "extensions/tasklist.h"

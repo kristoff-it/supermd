@@ -17,7 +17,6 @@ pub const Content = struct {
     image: Directive = .{ .kind = .{ .image = .{} } },
     video: Directive = .{ .kind = .{ .video = .{} } },
 
-    pub const dot = scripty.defaultDot(Content, Value, true);
     pub const description =
         \\The Scripty global scope in SuperMD gives you access to various
         \\rendering directives. Rendering directives allow you to define
@@ -35,7 +34,9 @@ pub const Content = struct {
         pub const image = Image.description;
         pub const video = Video.description;
     };
+
     pub const Builtins = struct {};
+    pub const Dot = true;
 };
 
 pub const Value = union(enum) {
@@ -79,18 +80,6 @@ pub const Value = union(enum) {
             *Value => v.*,
             else => @compileError("TODO: implement Value.from for " ++ @typeName(@TypeOf(v))),
         };
-    }
-
-    pub fn dot(
-        self: *Value,
-        gpa: Allocator,
-        path: []const u8,
-    ) error{OutOfMemory}!Value {
-        switch (self.*) {
-            .content => |c| return c.dot(gpa, path),
-            .directive => return .{ .err = "field access on directive" },
-            else => return .{ .err = "field access on primitive value" },
-        }
     }
 
     pub const call = scripty.defaultCall(Value, Content);
