@@ -8,7 +8,7 @@ const Writer = std.Io.Writer;
 const builtin = @import("builtin");
 const ziggy = @import("ziggy");
 const scripty = @import("scripty");
-const ScriptyVM = scripty.VM(Content, Value);
+const ScriptyVM = scripty.VM(Value);
 
 const superhtml = @import("superhtml");
 const html = superhtml.html;
@@ -171,7 +171,7 @@ pub fn init(gpa: Allocator, src: []const u8, rcp: CmarkParser) error{OutOfMemory
 
     return .{
         .md = ast,
-        .errors = try p.errors.toOwnedSlice(gpa),
+        .errors = try p.errors.toOwnedSlice(arena),
         .ids = p.ids,
         .footnotes = p.footnotes,
         .arena = arena_impl.state,

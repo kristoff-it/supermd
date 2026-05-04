@@ -40,7 +40,7 @@ pub const Content = struct {
 };
 
 pub const Value = union(enum) {
-    content: *Content,
+    root: *Content,
     directive: *Directive,
 
     // Primitive values
@@ -58,11 +58,15 @@ pub const Value = union(enum) {
         return .{ .string = s };
     }
 
-    pub fn fromNumberLiteral(bytes: []const u8) Value {
+    pub fn fromIntegerLiteral(bytes: []const u8) Value {
         const num = std.fmt.parseInt(i64, bytes, 10) catch {
             return .{ .err = "error parsing numeric literal" };
         };
         return .{ .int = num };
+    }
+    pub fn fromFloatLiteral(bytes: []const u8) Value {
+        _ = bytes;
+        return .{ .err = "floats are not supported" };
     }
 
     pub fn fromBooleanLiteral(b: bool) Value {
@@ -72,7 +76,7 @@ pub const Value = union(enum) {
     pub fn from(gpa: Allocator, v: anytype) !Value {
         _ = gpa;
         return switch (@TypeOf(v)) {
-            *Content => .{ .content = v },
+            *Content => .{ .root = v },
             *Directive => .{ .directive = v },
             []const u8 => .{ .string = v },
             bool => .{ .bool = v },
@@ -80,27 +84,6 @@ pub const Value = union(enum) {
             *Value => v.*,
             else => @compileError("TODO: implement Value.from for " ++ @typeName(@TypeOf(v))),
         };
-    }
-
-    pub const call = scripty.defaultCall(Value, Content);
-
-    pub fn builtinsFor(
-        comptime tag: @typeInfo(Value).@"union".tag_type.?,
-    ) type {
-        const f = std.meta.fieldInfo(Value, tag);
-        switch (@typeInfo(f.type)) {
-            .pointer => |ptr| {
-                if (@typeInfo(ptr.child) == .@"struct") {
-                    return @field(ptr.child, "Builtins");
-                }
-            },
-            .@"struct" => {
-                return @field(f.type, "Builtins");
-            },
-            else => {},
-        }
-
-        return struct {};
     }
 };
 
