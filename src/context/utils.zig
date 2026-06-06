@@ -16,10 +16,10 @@ pub fn directiveCall(
         inline else => |*k, tag| {
             const Bs = @typeInfo(@TypeOf(k)).pointer.child.Builtins;
 
-            inline for (@typeInfo(Bs).@"struct".decls) |decl| {
-                if (decl.name[0] == '_') continue;
-                if (std.mem.eql(u8, decl.name, fn_name)) {
-                    return @field(Bs, decl.name).call(
+            inline for (@typeInfo(Bs).@"struct".decl_names) |decl_name| {
+                if (decl_name[0] == '_') continue;
+                if (std.mem.eql(u8, decl_name, fn_name)) {
+                    return @field(Bs, decl_name).call(
                         k,
                         d,
                         gpa,

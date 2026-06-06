@@ -2,7 +2,7 @@
     .name = .supermd,
     .version = "0.1.0",
     .fingerprint = 0x23d062d1dc28c7dc,
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0-dev.812+5434f85c4",
     .dependencies = .{
         .gfm = .{
             .url = "git+https://github.com/kristoff-it/cmark-gfm#cd0aba87cc89f0c8aa9393e59505db271ea30239",
@@ -13,20 +13,20 @@
             .hash = "tracy-0.0.0-4Xw-1pwwAABTfMgoDP1unCbZDZhJEfict7XCBGF6IdIn",
         },
         .scripty = .{
-            .url = "git+https://github.com/kristoff-it/scripty#9c1e5903acd2a591f87f577b2ea08895e7168b9d",
-            .hash = "scripty-0.1.0-LKK5OzcUAQDVndpJNPAm4eC_-G0HaXUdQejzb9X6C2vq",
+            .url = "git+https://github.com/kristoff-it/scripty#ad75ad546bc7dd2ece4acd23404e25cd65a4bde9",
+            .hash = "scripty-0.1.0-LKK5O-sUAQDifuGq_k00NAdEgJjNxXoFTt9js_A7Yx4F",
         },
         .ziggy = .{
-            .url = "git+https://github.com/kristoff-it/ziggy?ref=old#0fdd57cbb052e7aa5930b3ed960ea3450f9dc2b0",
-            .hash = "ziggy-0.1.0-kTg8v15ABgBGDedRmKfxGUWBxSxMBnEfYjazvZKVVrzP",
+            .url = "git+https://github.com/kristoff-it/ziggy?ref=old#189d1d5e862e896df49d8afca8e49e0cb1835785",
+            .hash = "ziggy-0.1.0-kTg8v3xBBgD66kzRYoOgByokYiVMupy4dew5buN45X-y",
         },
         .superhtml = .{
-            .url = "git+https://github.com/kristoff-it/superhtml#5ca7066c50b10c459aa6d1ad011bc37124c2d354",
-            .hash = "superhtml-0.6.2-Y7MdPCZxJADwkXTXHmwQ0AKWKgbmQjJBnT7QTVqaX9Vp",
+            .url = "git+https://github.com/kristoff-it/superhtml#090f80d2ba256fb1b425c952f27953792cae6688",
+            .hash = "superhtml-0.6.2-Y7MdPCtyJAD930ctpUN02LzUt0sA6h34YIVxEODm7FOv",
         },
         .translate_c = .{
-            .url = "git+https://codeberg.org/ziglang/translate-c?ref=zig-0.16.x#42f630117deffd5318b4a6ceffbd366dd0af8cee",
-            .hash = "translate_c-1.0.0-Q_BUWo75BgBmrtWsRz9QVUZlzvsSUUe_IIXD9vmWguhX",
+            .url = "git+https://codeberg.org/ziglang/translate-c#c26bb176f3d63c8f3f57ac4e82d78f9124506b0d",
+            .hash = "translate_c-0.0.0-Q_BUWuEVBwCbZUsNorTQ6-d3nYx8KDgHHWtVWBzgzyB5",
         },
     },
     .paths = .{"."},
