@@ -36,6 +36,7 @@ pub const ScriptyParam = union(enum) {
     Link,
     Image,
     Video,
+    Audio,
     Code,
     str,
     bool,
@@ -59,6 +60,7 @@ pub const ScriptyParam = union(enum) {
             .mathtex => .Mathtex,
             .image => .Image,
             .video => .Video,
+            .audio => .Audio,
             .link => .Link,
             .code => .Code,
         };
@@ -76,6 +78,7 @@ pub const ScriptyParam = union(enum) {
             context.Link => .Link,
             context.Image => .Image,
             context.Video => .Video,
+            context.Audio => .Audio,
             context.Code => .Code,
 
             // context.Template => .any,
