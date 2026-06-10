@@ -48,7 +48,7 @@ pub fn directiveBuiltin(
         pub const description = desc;
         pub const signature: Signature = .{
             .params = switch (tag) {
-                .content,
+                .root,
                 .directive,
                 => unreachable,
                 .string => &.{.str},

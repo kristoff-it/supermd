@@ -201,17 +201,17 @@ fn printType(out_stream: *Writer, v: Reference.Type) !void {
 
             b.signature,
             b.description,
-            // b.examples,
+                // b.examples,
         });
     }
 }
 
 pub fn analyzeValues() []const Reference.Type {
     const info = @typeInfo(context.Value).@"union";
-    var values: [info.fields.len]Reference.Type = undefined;
-    inline for (info.fields, &values) |f, *v| {
-        const t = getStructType(f.type) orelse {
-            std.debug.assert(f.type == []const u8);
+    var values: [info.field_names.len]Reference.Type = undefined;
+    inline for (info.field_types, &values) |f_type, *v| {
+        const t = getStructType(f_type) orelse {
+            std.debug.assert(f_type == []const u8);
             v.* = .{
                 .name = .err,
                 .fields = &.{},
@@ -258,12 +258,12 @@ fn getStructType(T: type) ?type {
 
 fn analyzeBuiltins(T: type) []const Reference.Builtin {
     const info = @typeInfo(T.Builtins).@"struct";
-    var decls: [info.decls.len]Reference.Builtin = undefined;
+    var decls: [info.decl_names.len]Reference.Builtin = undefined;
     @setEvalBranchQuota(10000);
-    inline for (info.decls, &decls) |decl, *b| {
-        const t = @field(T.Builtins, decl.name);
+    inline for (info.decl_names, &decls) |decl_name, *b| {
+        const t = @field(T.Builtins, decl_name);
         b.* = .{
-            .name = decl.name,
+            .name = decl_name,
             .signature = t.signature,
             .description = t.description,
             // .examples = t.examples,
@@ -276,15 +276,15 @@ fn analyzeBuiltins(T: type) []const Reference.Builtin {
 
 fn analyzeFields(T: type) []const Reference.Field {
     const info = @typeInfo(T).@"struct";
-    var reference_fields: [info.fields.len]Reference.Field = undefined;
+    var reference_fields: [info.field_names.len]Reference.Field = undefined;
     var idx: usize = 0;
-    for (info.fields) |tf| {
+    for (info.field_names) |tf_name| {
         if (!@hasDecl(T, "Fields")) continue;
-        if (tf.name[0] == '_') continue;
+        if (tf_name[0] == '_') continue;
         reference_fields[idx] = .{
-            .name = tf.name,
-            .description = @field(T.Fields, tf.name),
-            .type_name = Param.fromField(T, tf.name),
+            .name = tf_name,
+            .description = @field(T.Fields, tf_name),
+            .type_name = Param.fromField(T, tf_name),
         };
         idx += 1;
     }
@@ -294,9 +294,9 @@ fn analyzeFields(T: type) []const Reference.Field {
 
 fn analyzeKinds() []const Reference.Type {
     const info = @typeInfo(context.Directive.Kind).@"union";
-    var ref_types: [info.fields.len]Reference.Type = undefined;
-    for (info.fields, &ref_types) |f, *rf| {
-        rf.* = analyzeType(f.type);
+    var ref_types: [info.field_names.len]Reference.Type = undefined;
+    for (info.field_types, &ref_types) |f_type, *rf| {
+        rf.* = analyzeType(f_type);
     }
     const out = ref_types;
     return &out;
