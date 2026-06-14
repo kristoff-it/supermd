@@ -2,7 +2,7 @@
     .name = .supermd,
     .version = "0.1.0",
     .fingerprint = 0x23d062d1dc28c7dc,
-    .minimum_zig_version = "0.17.0-dev.812+5434f85c4",
+    .minimum_zig_version = "0.17.0-dev.857+2b2b85c5f",
     .dependencies = .{
         .gfm = .{
             .url = "git+https://github.com/kristoff-it/cmark-gfm#cd0aba87cc89f0c8aa9393e59505db271ea30239",
