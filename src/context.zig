@@ -93,11 +93,11 @@ pub const Directive = struct {
     id: ?[]const u8 = null,
     attrs: ?[][]const u8 = null,
     title: ?[]const u8 = null,
-    data: Data = .{},
+    data: Data = .empty,
 
     kind: Kind,
 
-    pub const Data = ziggy.dynamic.Map(ziggy.dynamic.Value);
+    pub const Data = ziggy.Dictionary(ziggy.Dynamic);
     pub const Kind = union(enum) {
         section: Section,
         block: Block,
@@ -279,7 +279,7 @@ pub const Directive = struct {
                     .err = "field already set",
                 };
 
-                var new: Data = .{};
+                var new: Data = .empty;
                 var idx: usize = 0;
                 while (idx < args.len) {
                     const key = switch (args[idx]) {
