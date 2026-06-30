@@ -390,7 +390,7 @@ pub const Text = struct {
         \\
         \\Example:
         \\```markdown
-        \\Hello [World]($text.id('foo').attrs('bar', 'baz'))!
+        \\Hello [World]($text.id('foo').attrs('bar','baz'))!
         \\```
         \\
         \\This will be rendered by SuperHTML as:
@@ -472,7 +472,7 @@ pub const Heading = struct {
         \\
         \\Example:
         \\```markdown
-        \\# [Title]($heading.id('foo').attrs('bar', 'baz'))
+        \\# [Title]($heading.id('foo').attrs('bar','baz'))
         \\```
         \\
         \\This will be rendered by SuperHTML as:
@@ -651,17 +651,17 @@ pub const Image = struct {
                 \\
                 \\When both dimensions are non-zero, the image will be resized to exactly those dimensions:
                 \\```markdown
-                \\[Image caption]($image.asset('example.jpg').size(800, 600))
+                \\[Image caption]($image.asset('example.jpg').size(800,600))
                 \\```
                 \\
                 \\To specify width while maintaining aspect ratio, set height to 0:
                 \\```markdown
-                \\[Image caption]($image.asset('example.jpg').size(800, 0))
+                \\[Image caption]($image.asset('example.jpg').size(800,0))
                 \\```
                 \\
                 \\To specify height while maintaining aspect ratio, set width to 0:
                 \\```markdown
-                \\[Image caption]($image.asset('example.jpg').size(0, 600))
+                \\[Image caption]($image.asset('example.jpg').size(0,600))
                 \\```
                 \\
             ;
@@ -1001,7 +1001,7 @@ pub const Code = struct {
                 \\ The second argument is inclusive.
                 \\
                 \\ ```
-                \\ []($code.asset("main.zig").lines(10, 15))
+                \\ []($code.asset("main.zig").lines(10,15))
                 \\ ```
                 \\ This will include only lines 10 - 15 from the main.zig asset file.
             ;
