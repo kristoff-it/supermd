@@ -549,7 +549,6 @@ const Parser = struct {
                         .kind = .{
                             .link = .{
                                 .src = .{ .url = src },
-                                .new = true,
                             },
                         },
                     };
@@ -572,7 +571,6 @@ const Parser = struct {
                         .kind = .{
                             .link = .{
                                 .src = .{ .url = src },
-                                .new = true,
                             },
                         },
                     };
