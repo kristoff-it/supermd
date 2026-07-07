@@ -38,11 +38,8 @@ pub fn main(init: std.process.Init) !void {
     try w.writeAll(
         \\---
         \\.title = "SuperMD Scripty Reference",
-        \\.description = "",
-        \\.author = "Loris Cro",
+        \\.date = .date("2023-06-16T00:00:00"),
         \\.layout = "scripty-reference.shtml",
-        \\.date = @date("2023-06-16T00:00:00"),
-        \\.draft = false,
         \\---
         \\
     );
@@ -201,7 +198,7 @@ fn printType(out_stream: *Writer, v: Reference.Type) !void {
 
             b.signature,
             b.description,
-                // b.examples,
+            // b.examples,
         });
     }
 }
