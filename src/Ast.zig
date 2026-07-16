@@ -106,12 +106,21 @@ pub const CmarkParser = struct {
     }
 };
 
-pub fn init(gpa: Allocator, src: []const u8, rcp: CmarkParser) error{OutOfMemory}!Ast {
+pub const Options = struct {
+    auto_target_blank: bool = false,
+};
+
+pub fn init(
+    gpa: Allocator,
+    src: []const u8,
+    rcp: CmarkParser,
+    opts: Options,
+) error{OutOfMemory}!Ast {
     var arena_impl = std.heap.ArenaAllocator.init(gpa);
     const arena = arena_impl.allocator();
 
     log.debug("starting analysis", .{});
-    var p: Parser = .{ .gpa = arena };
+    var p: Parser = .{ .gpa = arena, .opts = opts };
 
     c.cmark_parser_feed(rcp.parser, src.ptr, src.len);
     const ast: CMarkAst = .{
@@ -180,6 +189,7 @@ pub fn init(gpa: Allocator, src: []const u8, rcp: CmarkParser) error{OutOfMemory
 
 const Parser = struct {
     gpa: Allocator,
+    opts: Options,
     errors: std.ArrayList(Error) = .empty,
     ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     referenced_ids: std.StringArrayHashMapUnmanaged(Node) = .{},
@@ -549,6 +559,7 @@ const Parser = struct {
                         .kind = .{
                             .link = .{
                                 .src = .{ .url = src },
+                                .new = p.opts.auto_target_blank,
                             },
                         },
                     };
@@ -571,6 +582,7 @@ const Parser = struct {
                         .kind = .{
                             .link = .{
                                 .src = .{ .url = src },
+                                .new = p.opts.auto_target_blank,
                             },
                         },
                     };
@@ -784,7 +796,7 @@ test "basics" {
     ;
 
     c.cmark_gfm_core_extensions_ensure_registered();
-    const ast = try Ast.init(std.testing.allocator, case, .default());
+    const ast = try Ast.init(std.testing.allocator, case, .default(), .{});
     defer ast.deinit(std.testing.allocator);
     try std.testing.expectFmt(expected, "{f}", .{ast});
 }
@@ -804,7 +816,7 @@ test "image" {
     ;
 
     c.cmark_gfm_core_extensions_ensure_registered();
-    const ast = try Ast.init(std.testing.allocator, case, .default());
+    const ast = try Ast.init(std.testing.allocator, case, .default(), .{});
     defer ast.deinit(std.testing.allocator);
     try std.testing.expectFmt(expected, "{f}", .{ast});
 }
