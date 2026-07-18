@@ -19,6 +19,31 @@ pub const Range = struct {
         row: u32,
         col: u32,
     };
+
+    // If you're calling this, something dumb is going on.
+    // Currently this is used because markdown doesn't provide spans.
+    pub fn span(r: Range, src: []const u8) Span {
+        const std = @import("std");
+
+        var start: usize = r.start.col;
+        var it = std.mem.splitScalar(u8, src, '\n');
+        for (1..r.start.row) |_| {
+            const line = it.next() orelse "";
+            start += line.len + 1;
+        }
+
+        var end = start + r.end.col;
+        for (r.start.row..r.end.row) |_| {
+            const line = it.next() orelse "";
+            end += line.len + 1;
+        }
+
+        const loc: Span = .{
+            .start = @intCast(start - 1),
+            .end = @intCast(end - 1),
+        };
+        return loc;
+    }
 };
 
 pub const Line = struct { line: []const u8, start: u32 };
@@ -37,7 +62,7 @@ pub const Span = struct {
 
     pub fn range(self: Span, code: []const u8) Range {
         var selection: Range = .{
-            .start = .{ .row = 0, .col = 0 },
+            .start = .{ .row = 1, .col = 0 },
             .end = undefined,
         };
 
@@ -49,12 +74,14 @@ pub const Span = struct {
         }
 
         selection.end = selection.start;
+        selection.start.col += 1;
         for (code[self.start..self.end]) |ch| {
             if (ch == '\n') {
                 selection.end.row += 1;
                 selection.end.col = 0;
             } else selection.end.col += 1;
         }
+        selection.end.col += 1;
         return selection;
     }
 

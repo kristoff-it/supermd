@@ -321,7 +321,7 @@ pub const Section = struct {
         \\that can be rendered individually by a template.
     ;
 
-    pub fn validate(gpa: Allocator, d: *Directive, ctx: Node) !?Value {
+    pub fn validate(gpa: Allocator, _: *Directive, ctx: Node) !?Value {
         const parent = ctx.parent().?;
 
         // A section must be placed either:
@@ -360,27 +360,9 @@ pub const Section = struct {
                 .err = "sections must be top level elements or be embedded in headings",
             },
         }
-
-        // End sections additionally cannot have any other property set
-        if (d.kind.section.end != null) {
-            if (d.id != null or d.attrs != null) {
-                return .{
-                    .err = "end section directive cannot have any other property set",
-                };
-            }
-        }
         return null;
     }
-    pub const Builtins = struct {
-        // pub const end = utils.directiveBuiltin("end", .bool,
-        //     \\Calling this function makes this section directive
-        //     \\terminate a previous section without opening a new
-        //     \\one.
-        //     \\
-        //     \\An end section directive cannot have any other
-        //     \\property set.
-        // );
-    };
+    pub const Builtins = struct {};
 };
 
 pub const Text = struct {

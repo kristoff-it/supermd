@@ -43,16 +43,14 @@ pub const Error = struct {
     kind: Kind,
 
     pub const Kind = union(enum) {
-        html_is_forbidden,
-        nested_section_directive,
-        section_must_not_have_text,
-
-        end_section_in_heading,
-        must_be_first_under_blockquote,
-        must_be_first_under_heading,
-        must_have_id,
+        inline_html,
+        // nested_section_directive,
+        // section_must_not_have_text,
+        // end_section_in_heading,
+        // must_be_first_under_blockquote,
+        // must_be_first_under_heading,
+        heading_section_missing_id,
         invalid_ref,
-
         no_alt_in_links,
         expression_in_image_syntax,
         empty_expression,
@@ -60,13 +58,186 @@ pub const Error = struct {
             id: []const u8,
             original: Node,
         },
-
         scripty: struct {
+            len: u32,
             span: Span,
             err: []const u8,
         },
-
         html: html.Ast.Error,
+        heading_skip: struct {
+            have: u8,
+            last: ?Node,
+        },
+    };
+
+    pub fn fmt(
+        err: Error,
+        frontmatter_line_count: u32,
+        src: []const u8,
+        path: []const u8,
+    ) Fmt {
+        return .{
+            .err = err,
+            .src = src,
+            .path = path,
+            .fm_lines = frontmatter_line_count,
+        };
+    }
+
+    pub const Fmt = struct {
+        err: Error,
+        src: []const u8,
+        path: []const u8,
+        fm_lines: u32,
+
+        pub fn format(f: Fmt, w: *Io.Writer) Io.Writer.Error!void {
+            try w.print("{s}:{}:{}: ", .{
+                f.path,
+                f.fm_lines + f.err.main.start.row,
+                f.err.main.start.col,
+            });
+
+            var lp = linePreview(f.src, f.err.main);
+            lp.carets += 1;
+            switch (f.err.kind) {
+                .inline_html => {
+                    try w.print(
+                        \\error: markdown inline html syntax is forbidden
+                        \\{f}
+                        \\| -- note: superhtml supports `=html` code blocks as an alternative
+                        \\
+                    , .{lp});
+                },
+                // .nested_section_directive => {
+                //     try w.print(
+                //         \\section directives must be placed at the top level
+                //         \\
+                //     , .{});
+                // },
+                // .section_must_not_have_text => {
+                //     try w.print(
+                //         \\don't put text in the square brackets when defining a section
+                //         \\
+                //     , .{});
+                // },
+                .heading_section_missing_id => {
+                    try w.print(
+                        \\error: missing section id
+                        \\{f}
+                        \\| -- note: all heading sections must have an id
+                        \\
+                    , .{lp});
+                },
+                .invalid_ref => {
+                    try w.print(
+                        \\error: unknown ref
+                        \\{f}
+                        \\
+                    , .{lp});
+                },
+                .no_alt_in_links => {
+                    try w.print(
+                        \\error: vanilla alt text in scripted link syntax
+                        \\{f}
+                        \\| -- note: use `.alt()` to provide alt text
+                        \\
+                    , .{lp});
+                },
+                .expression_in_image_syntax => {
+                    try w.print(
+                        \\error: scripty expression in image syntax
+                        \\{f}
+                        \\| -- note: scripty expressions go in link syntax, remove the '!'
+                        \\
+                    , .{lp});
+                },
+                .empty_expression => {
+                    try w.print(
+                        \\error: link syntax without link or scripty expression
+                        \\{f}
+                        \\
+                    , .{lp});
+                },
+                .duplicate_id => |dup| {
+                    const orig = dup.original.range();
+                    var lp_dup = linePreview(f.src, orig);
+                    lp_dup.carets += 1;
+                    try w.print(
+                        \\error: duplicate id '{s}'
+                        \\{f}
+                        \\| -- note: first definition was on line {} col {}:
+                        \\{f}
+                        \\
+                    , .{
+                        dup.id,
+                        lp,
+                        f.fm_lines + orig.start.row,
+                        orig.start.col,
+                        lp_dup,
+                    });
+                },
+                .scripty => |sy| {
+                    const full_span = f.err.main.span(f.src);
+
+                    const range = if (std.mem.indexOf(u8, full_span.slice(f.src), "](")) |rel| blk: {
+                        const base: u32 = @intCast(full_span.start + rel + "](".len);
+                        const span: Span = .{
+                            .start = base + sy.span.start,
+                            .end = base + sy.span.end,
+                        };
+                        break :blk span.range(f.src);
+                    } else f.err.main;
+
+                    const lp_scripty = linePreview(f.src, range);
+                    try w.print(
+                        \\[scripty] error: {s}
+                        \\{f}
+                        \\
+                    , .{ sy.err, lp_scripty });
+                },
+                .html => |html_err| {
+                    try w.print(
+                        \\[html] error: {f}
+                        \\{f}
+                        \\
+                    , .{
+                        html_err.tag.fmt("test"),
+                        linePreview(f.src, f.err.main),
+                    });
+                },
+                .heading_skip => |gap| {
+                    try w.print(
+                        \\error: skipped heading level
+                        \\{f}
+                        \\
+                    , .{lp});
+
+                    if (gap.last) |last| {
+                        const range = last.range();
+                        var lp_heading = linePreview(f.src, range);
+                        lp_heading.carets += 1;
+                        try w.print(
+                            \\| -- note: previous heading (level {}):
+                            \\{f}
+                            \\
+                        , .{ last.headingLevel(), lp_heading });
+                    } else {
+                        try w.writeAll(
+                            \\| -- note: supermd documents start at heading level 1 ('#')
+                            \\| -- note: if your intent is to start the content at '<h2>', you
+                            \\|          can change how headings render in html by setting the
+                            \\|          corresponding option in your zine config file
+                            \\
+                        );
+                    }
+
+                    // : struct {
+                    //     have: u8,
+                    //     last: u8,
+                    // },
+                },
+            }
+        }
     };
 };
 
@@ -129,15 +300,30 @@ pub fn init(
     };
 
     var current = ast.root.firstChild();
+    var last_heading_lvl: i32 = 0;
+    var last_heading: ?Node = null;
     while (current) |n| : (current = n.nextSibling()) switch (n.nodeType()) {
         .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
         .LIST => try p.analyzeList(n),
         .ITEM => try p.analyzeItem(n),
         .CODE_BLOCK => try p.analyzeCodeBlock(n),
-        .HTML_BLOCK => try p.addError(n.range(), .html_is_forbidden),
+        .HTML_BLOCK => try p.addError(n.range(), .inline_html),
         .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
         .PARAGRAPH => try p.analyzeParagraph(n),
-        .HEADING => try p.analyzeHeading(n),
+        .HEADING => {
+            const new_lvl = n.headingLevel();
+            if (!p.sectioned and (new_lvl > last_heading_lvl + 1)) {
+                try p.addError(n.range(), .{
+                    .heading_skip = .{
+                        .have = @intCast(new_lvl),
+                        .last = last_heading,
+                    },
+                });
+            }
+            last_heading_lvl = new_lvl;
+            last_heading = n;
+            try p.analyzeHeading(n);
+        },
         .THEMATIC_BREAK => {},
         .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
 
@@ -191,6 +377,7 @@ const Parser = struct {
     gpa: Allocator,
     opts: Options,
     errors: std.ArrayList(Error) = .empty,
+    sectioned: bool = false,
     ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     referenced_ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
@@ -225,27 +412,15 @@ const Parser = struct {
                     if (directive.id) |id| try p.addId(id, h);
                     break :blk;
                 },
-                .block => {
-                    // try p.addError(
-                    //     link.range(),
-                    //     .must_be_first_under_blockquote,
-                    // );
-                    //
-
-                    return;
-                },
+                .block => return,
                 .heading => {
                     if (directive.id) |id| try p.addId(id, h);
                     _ = try h.setDirective(p.gpa, directive, false);
                 },
-                .section => |sect| {
-                    if (sect.end != null) {
-                        try p.addError(link.range(), .end_section_in_heading);
-                        return;
-                    }
-
+                .section => {
+                    p.sectioned = true;
                     const id = directive.id orelse {
-                        try p.addError(link.range(), .must_have_id);
+                        try p.addError(link.range(), .heading_section_missing_id);
                         return;
                     };
 
@@ -404,7 +579,7 @@ const Parser = struct {
                 .LIST => try p.analyzeList(n),
                 .ITEM => try p.analyzeItem(n),
                 .CODE_BLOCK => try p.analyzeCodeBlock(n),
-                .HTML_BLOCK => try p.addError(n.range(), .html_is_forbidden),
+                .HTML_BLOCK => try p.addError(n.range(), .inline_html),
                 .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
                 .PARAGRAPH => try p.analyzeParagraph(n),
                 .HEADING => try p.analyzeHeading(n),
@@ -432,6 +607,7 @@ const Parser = struct {
                                 _ = std.Uri.parse(src) catch {
                                     try p.addError(n.range(), .{
                                         .scripty = .{
+                                            .len = @intCast(src.len),
                                             .span = .{
                                                 .start = 0,
                                                 .end = @intCast(src.len),
@@ -477,6 +653,9 @@ const Parser = struct {
                             current = n.nextSibling();
                         },
                         .section, .heading => {
+                            if (directive.kind == .section) {
+                                p.sectioned = true;
+                            }
                             const parent = n.parent().?;
                             _ = try parent.setDirective(p.gpa, directive, false);
 
@@ -514,6 +693,7 @@ const Parser = struct {
                         },
                     },
                 };
+                try p.referenced_ids.put(p.gpa, src[1..], n);
                 return n.setDirective(p.gpa, &d, true);
             },
             '/' => {
@@ -569,6 +749,7 @@ const Parser = struct {
                     _ = std.Uri.parse(src) catch {
                         try p.addError(n.range(), .{
                             .scripty = .{
+                                .len = @intCast(src.len),
                                 .span = .{
                                     .start = 0,
                                     .end = @intCast(src.len),
@@ -612,6 +793,7 @@ const Parser = struct {
                 if (try d.validate(p.gpa, n)) |err| {
                     try p.addError(n.range(), .{
                         .scripty = .{
+                            .len = @intCast(src.len),
                             .span = .{ .start = 0, .end = @intCast(src.len) },
                             .err = err.err,
                         },
@@ -635,6 +817,7 @@ const Parser = struct {
             .err => |msg| {
                 try p.addError(n.range(), .{
                     .scripty = .{
+                        .len = @intCast(src.len),
                         .span = .{
                             .start = res.loc.start,
                             .end = res.loc.end,
@@ -782,6 +965,43 @@ pub fn format(
             directive.id orelse "",
         });
     }
+}
+
+pub const LinePreview = struct {
+    code: []const u8,
+    spaces: u32,
+    carets: u32,
+
+    pub fn format(lp: LinePreview, w: *Io.Writer) Io.Writer.Error!void {
+        try w.print("|    {s}\n", .{lp.code});
+        try w.writeAll("|    ");
+        try w.splatByteAll(' ', lp.spaces);
+        try w.splatByteAll('^', lp.carets);
+    }
+};
+
+pub fn linePreview(src: []const u8, range: Range) LinePreview {
+    const line = blk: {
+        var it = std.mem.splitScalar(u8, src, '\n');
+        for (1..range.start.row) |_| _ = it.next();
+        break :blk it.next().?;
+    };
+
+    const line_trim_left = std.mem.trimStart(u8, line, &std.ascii.whitespace);
+    const start_trim_left = line.len - line_trim_left.len;
+    const line_trim = std.mem.trimEnd(u8, line_trim_left, &std.ascii.whitespace);
+
+    const caret_len = if (range.start.row == range.end.row)
+        range.end.col - range.start.col
+    else
+        line_trim.len - start_trim_left;
+    const caret_spaces_len = range.start.col - 1 - start_trim_left;
+
+    return .{
+        .code = line_trim,
+        .spaces = @intCast(caret_spaces_len),
+        .carets = @intCast(if (caret_len == 0) 1 else caret_len),
+    };
 }
 
 test "basics" {

@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.17.0-dev.857+2b2b85c5f",
     .dependencies = .{
         .gfm = .{
-            .url = "git+https://github.com/kristoff-it/cmark-gfm#cd0aba87cc89f0c8aa9393e59505db271ea30239",
-            .hash = "cmark_gfm-0.1.0-uQgTKymaFwDK0jVZszXfDtQtW6BnS44Bp0GS55TVBD4p",
+            .url = "git+https://github.com/kristoff-it/cmark-gfm#58c054b81fdf126f0a2d4e079b25a39a4a5181c6",
+            .hash = "cmark_gfm-0.1.0-uQgTK1maFwCCg-Q8XWHN0d_rhFVUIem1qrMKMIZ5BJMR",
         },
         .tracy = .{
             .url = "git+https://github.com/kristoff-it/tracy#67d2d89e351048c76fc6d161e0ac09d8a831dc60",
