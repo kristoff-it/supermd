@@ -360,10 +360,6 @@ pub fn init(
         }
     }
 
-    for (p.footnotes.values()) |footnote| {
-        footnote.node.unlink();
-    }
-
     return .{
         .md = ast,
         .errors = try p.errors.toOwnedSlice(arena),
@@ -525,10 +521,11 @@ const Parser = struct {
     pub fn analyzeItem(p: *Parser, block: Node) !void {
         try p.analyzeSiblings(block.firstChild(), block);
     }
+
     pub fn analyzeFootnoteReference(p: *Parser, footnoteRef: Node) !void {
         const name = footnoteRef.literal().?;
         const result = try p.footnotes.getOrPut(p.gpa, name);
-        log.debug("found footnote {s}: {any}", .{ name, result.found_existing });
+        log.debug("found footnote {s}: {}", .{ name, result.found_existing });
         if (!result.found_existing) {
             const def = footnoteRef.parentFootnoteDef().?;
             const def_id = try std.fmt.allocPrint(p.gpa, "fn-{d}", .{result.index + 1});
@@ -550,6 +547,7 @@ const Parser = struct {
         const ref_id = result.value_ptr.*.ref_ids[@intCast(footnoteRef.footnoteRefIx() - 1)];
         try p.addId(ref_id, footnoteRef);
     }
+
     pub fn analyzeFootnoteDefinition(p: *Parser, footnote: Node) !void {
         try p.analyzeSiblings(footnote.firstChild(), footnote);
     }
