@@ -39,7 +39,7 @@ pub fn build(b: *std.Build) !void {
         .tsan = tsan,
     });
 
-    const translate_c = b.dependency("translate_c", .{ .optimize = .ReleaseFast });
+    const translate_c = b.dependency("translate_c", .{ .optimize = .fast });
     const t: Translator = .init(translate_c, .{
         .c_source_file = b.path("src/c.h"),
         .target = target,
