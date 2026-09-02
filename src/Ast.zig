@@ -49,6 +49,7 @@ pub const Error = struct {
         // end_section_in_heading,
         // must_be_first_under_blockquote,
         // must_be_first_under_heading,
+        heading_link_sibling,
         heading_section_missing_id,
         invalid_ref,
         no_alt_in_links,
@@ -120,6 +121,14 @@ pub const Error = struct {
                 //         \\
                 //     , .{});
                 // },
+                .heading_link_sibling => {
+                    try w.print(
+                        \\error: block/section heading with text outside of inner link
+                        \\{f}
+                        \\| -- note: all text must be inside the inner link
+                        \\
+                    , .{lp});
+                },
                 .heading_section_missing_id => {
                     try w.print(
                         \\error: missing section id
@@ -291,7 +300,7 @@ pub fn init(
     const arena = arena_impl.allocator();
 
     log.debug("starting analysis", .{});
-    var p: Parser = .{ .gpa = arena, .opts = opts };
+    var p: Parser = .{ .gpa = arena, .src = src, .opts = opts };
 
     c.cmark_parser_feed(rcp.parser, src.ptr, src.len);
     const ast: CMarkAst = .{
@@ -300,56 +309,9 @@ pub fn init(
     };
 
     var current = ast.root.firstChild();
-    var last_heading_lvl: i32 = 0;
-    var last_heading: ?Node = null;
-    while (current) |n| : (current = n.nextSibling()) switch (n.nodeType()) {
-        .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
-        .LIST => try p.analyzeList(n),
-        .ITEM => try p.analyzeItem(n),
-        .CODE_BLOCK => try p.analyzeCodeBlock(n),
-        .HTML_BLOCK => try p.addError(n.range(), .inline_html),
-        .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
-        .PARAGRAPH => try p.analyzeParagraph(n),
-        .HEADING => {
-            const new_lvl = n.headingLevel();
-            if (!p.sectioned and (new_lvl > last_heading_lvl + 1)) {
-                try p.addError(n.range(), .{
-                    .heading_skip = .{
-                        .have = @intCast(new_lvl),
-                        .last = last_heading,
-                    },
-                });
-            }
-            last_heading_lvl = new_lvl;
-            last_heading = n;
-            try p.analyzeHeading(n);
-        },
-        .THEMATIC_BREAK => {},
-        .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
-
-        // Inlines
-        .TEXT,
-        .SOFTBREAK,
-        .LINEBREAK,
-        .CODE,
-        .HTML_INLINE,
-        .CUSTOM_INLINE,
-        .EMPH,
-        .STRONG,
-        .LINK,
-        .IMAGE,
-        .FOOTNOTE_REFERENCE,
-        => unreachable,
-
-        else => |nt| if (@intFromEnum(nt) == c.CMARK_NODE_STRIKETHROUGH) {
-            unreachable; // can't be a block level node
-        } else if (@intFromEnum(nt) == c.CMARK_NODE_TABLE) {
-            try p.analyzeTable(n);
-        } else std.debug.panic(
-            "TODO: implement support for {x}",
-            .{n.nodeType()},
-        ),
-    };
+    while (current) |n| : (current = n.nextSibling()) {
+        try p.analyzeNode(n);
+    }
 
     for (p.referenced_ids.keys()) |k| {
         if (!p.ids.contains(k)) {
@@ -371,9 +333,12 @@ pub fn init(
 
 const Parser = struct {
     gpa: Allocator,
+    src: []const u8,
     opts: Options,
     errors: std.ArrayList(Error) = .empty,
     sectioned: bool = false,
+    last_heading_lvl: i32 = 0,
+    last_heading: ?Node = null,
     ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     referenced_ids: std.StringArrayHashMapUnmanaged(Node) = .{},
     footnotes: std.StringArrayHashMapUnmanaged(Footnote) = .{},
@@ -394,13 +359,142 @@ const Parser = struct {
         gop.value_ptr.* = n;
     }
 
+    pub fn analyzeNode(p: *Parser, n: Node) error{OutOfMemory}!void {
+        switch (n.nodeType()) {
+            .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
+            .LIST => try p.analyzeList(n),
+            .ITEM => try p.analyzeItem(n),
+            .CODE_BLOCK => try p.analyzeCodeBlock(n),
+            .HTML_BLOCK => try p.addError(n.range(), .inline_html),
+            .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
+            .PARAGRAPH => try p.analyzeParagraph(n),
+            .HEADING => {
+                try p.analyzeHeading(n);
+                if (n.parent() == null) {
+                    const new_lvl = n.headingLevel();
+                    if (!p.sectioned and (new_lvl > p.last_heading_lvl + 1)) {
+                        try p.addError(n.range(), .{
+                            .heading_skip = .{
+                                .have = @intCast(new_lvl),
+                                .last = p.last_heading,
+                            },
+                        });
+                    }
+                    p.last_heading_lvl = new_lvl;
+                    p.last_heading = n;
+                }
+            },
+            .THEMATIC_BREAK => {},
+            .FOOTNOTE_DEFINITION => try p.analyzeFootnoteDefinition(n),
+
+            // Inlines
+            .HTML_INLINE => try p.addError(n.range(), .inline_html),
+            .IMAGE => {
+                const src = n.link() orelse return;
+                switch (src[0]) {
+                    '$' => {
+                        try p.addError(n.range(), .expression_in_image_syntax);
+                        return;
+                    },
+                    '/' => {
+                        var d: Directive = .{
+                            .kind = .{
+                                .image = .{
+                                    .src = .{ .site_asset = .{ .ref = src[1..] } },
+                                    .alt = n.title(),
+                                },
+                            },
+                        };
+                        _ = try n.setDirective(p.gpa, &d, true);
+                    },
+                    else => {
+                        if (std.mem.indexOf(u8, src, "://") != null) {
+                            _ = std.Uri.parse(src) catch {
+                                try p.addError(n.range(), .{
+                                    .scripty = .{
+                                        .len = @intCast(src.len),
+                                        .span = .{
+                                            .start = 0,
+                                            .end = @intCast(src.len),
+                                        },
+                                        .err = "invalid URL",
+                                    },
+                                });
+                                return;
+                            };
+                            var d: Directive = .{
+                                .kind = .{
+                                    .image = .{
+                                        .src = .{ .url = src },
+                                        .alt = n.title(),
+                                    },
+                                },
+                            };
+                            _ = try n.setDirective(p.gpa, &d, true);
+                            return;
+                        }
+
+                        const clean_src = if (std.mem.startsWith(u8, src, "./")) src[2..] else src;
+                        var d: Directive = .{
+                            .kind = .{
+                                .image = .{
+                                    .src = .{ .page_asset = .{ .ref = clean_src } },
+                                    .alt = n.title(),
+                                },
+                            },
+                        };
+                        _ = try n.setDirective(p.gpa, &d, true);
+                    },
+                }
+            },
+            .LINK => {
+                const src = n.link() orelse return;
+                const directive = try p.runScript(n, src) orelse return;
+                switch (directive.kind) {
+                    else => {
+                        if (directive.id) |id| try p.addId(id, n);
+                    },
+                    .mathtex => {},
+                    .section, .heading => {
+                        if (directive.kind == .section) {
+                            p.sectioned = true;
+                        }
+                        const parent = n.parent().?;
+                        _ = try parent.setDirective(p.gpa, directive, false);
+
+                        if (directive.id) |id| try p.addId(id, parent);
+                    },
+                }
+            },
+            .FOOTNOTE_REFERENCE => try p.analyzeFootnoteReference(n),
+            .EMPH,
+            .STRONG,
+            => {
+                var child = n.firstChild();
+                while (child) |ch| : (child = ch.nextSibling()) {
+                    try p.analyzeNode(ch);
+                }
+            },
+            .TEXT,
+            .SOFTBREAK,
+            .LINEBREAK,
+            .CODE,
+            .CUSTOM_INLINE,
+            => return,
+            else => |kind| if (@backingInt(kind) == c.CMARK_NODE_TABLE) {
+                try p.analyzeTable(n);
+            } else return,
+        }
+    }
+
     pub fn analyzeHeading(p: *Parser, h: Node) !void {
         const link = h.firstChild() orelse return;
-
         var next: ?Node = link;
         blk: {
             if (link.nodeType() != .LINK) break :blk;
+
             next = link.nextSibling();
+
             const src = link.link() orelse break :blk;
             const directive = try p.runScript(link, src) orelse break :blk;
             switch (directive.kind) {
@@ -408,12 +502,17 @@ const Parser = struct {
                     if (directive.id) |id| try p.addId(id, h);
                     break :blk;
                 },
-                .block => return,
+                .block => {},
                 .heading => {
                     if (directive.id) |id| try p.addId(id, h);
                     _ = try h.setDirective(p.gpa, directive, false);
                 },
                 .section => {
+                    if (link.nextSibling() != null) {
+                        try p.addError(h.range(), .heading_link_sibling);
+                        break :blk;
+                    }
+
                     p.sectioned = true;
                     const id = directive.id orelse {
                         try p.addError(link.range(), .heading_section_missing_id);
@@ -439,9 +538,16 @@ const Parser = struct {
                     };
                 },
             }
+
+            var link_next = link.firstChild();
+            while (link_next) |n| : (link_next = n.nextSibling()) {
+                try p.analyzeNode(n);
+            }
         }
 
-        try p.analyzeSiblings(next, h);
+        while (next) |n| : (next = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
 
     pub fn analyzeTable(p: *Parser, table: Node) !void {
@@ -449,13 +555,19 @@ const Parser = struct {
         while (row) |r| : (row = r.nextSibling()) {
             var cell = r.firstChild();
             while (cell) |cl| : (cell = cl.nextSibling()) {
-                try p.analyzeSiblings(cl.firstChild(), r);
+                var cell_inner = cl.firstChild();
+                while (cell_inner) |cli| : (cell_inner = cli.nextSibling()) {
+                    try p.analyzeNode(cli);
+                }
             }
         }
     }
 
     pub fn analyzeParagraph(p: *Parser, block: Node) !void {
-        try p.analyzeSiblings(block.firstChild(), block);
+        var child = block.firstChild();
+        while (child) |n| : (child = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
 
     pub fn analyzeCodeBlock(p: *Parser, block: Node) !void {
@@ -483,30 +595,54 @@ const Parser = struct {
                 });
             }
         }
-        // try p.analyzeSiblings(block.firstChild(), block);
     }
+
     pub fn analyzeList(p: *Parser, block: Node) !void {
-        try p.analyzeSiblings(block.firstChild(), block);
+        var child = block.firstChild();
+        while (child) |n| : (child = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
+
     pub fn analyzeCustomBlock(p: *Parser, block: Node) !void {
-        try p.analyzeSiblings(block.firstChild(), block);
+        var child = block.firstChild();
+        while (child) |n| : (child = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
+
     pub fn analyzeBlockQuote(p: *Parser, quote: Node) !void {
-        const para_or_h = quote.firstChild() orelse return;
-        // std.debug.assert(para_or_h.nodeType() == .PARAGRAPH or
-        //     para_or_h.nodeType() == .HEADING);
-        const link = para_or_h.firstChild() orelse return;
-        var next: ?Node = link;
+        const maybe_h = quote.firstChild() orelse return;
+
+        var next: ?Node = maybe_h;
         blk: {
+            const link = switch (maybe_h.nodeType()) {
+                .HEADING, .PARAGRAPH => maybe_h.firstChild() orelse break :blk,
+                else => break :blk,
+            };
+
             if (link.nodeType() != .LINK) break :blk;
-            next = link.nextSibling() orelse para_or_h.nextSibling();
+
+            // Skip heading in main analysis
+            next = maybe_h.nextSibling();
+
             const src = link.link() orelse break :blk;
             const directive = try p.runScript(link, src) orelse break :blk;
             if (directive.id) |id| try p.addId(id, quote);
             switch (directive.kind) {
                 else => break :blk,
                 .block => {
+                    if (maybe_h.nodeType() == .HEADING and link.nextSibling() != null) {
+                        try p.addError(maybe_h.range(), .heading_link_sibling);
+                        break :blk;
+                    }
+
                     _ = try quote.setDirective(p.gpa, directive, false);
+
+                    var link_next = link.nextSibling();
+                    while (link_next) |n| : (link_next = n.nextSibling()) {
+                        try p.analyzeNode(n);
+                    }
 
                     // link.unlink();
                     // const h1 = try Node.create(.HEADING);
@@ -516,10 +652,16 @@ const Parser = struct {
             }
         }
 
-        try p.analyzeSiblings(next, quote);
+        while (next) |n| : (next = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
+
     pub fn analyzeItem(p: *Parser, block: Node) !void {
-        try p.analyzeSiblings(block.firstChild(), block);
+        var child = block.firstChild();
+        while (child) |n| : (child = n.nextSibling()) {
+            try p.analyzeNode(n);
+        }
     }
 
     pub fn analyzeFootnoteReference(p: *Parser, footnoteRef: Node) !void {
@@ -549,122 +691,9 @@ const Parser = struct {
     }
 
     pub fn analyzeFootnoteDefinition(p: *Parser, footnote: Node) !void {
-        try p.analyzeSiblings(footnote.firstChild(), footnote);
-    }
-
-    pub fn analyzeSiblings(p: *Parser, start: ?Node, stop: Node) error{OutOfMemory}!void {
-        var current = start;
-        while (current) |n| {
-            const kind = n.nodeType();
-            switch (kind) {
-                .LIST,
-                .ITEM,
-                .CODE_BLOCK,
-                .HTML_BLOCK,
-                .CUSTOM_BLOCK,
-                .PARAGRAPH,
-                .HEADING,
-                => {
-                    current = n.nextSibling();
-                },
-                else => {
-                    current = n.next(stop);
-                },
-            }
-
-            switch (kind) {
-                .BLOCK_QUOTE => try p.analyzeBlockQuote(n),
-                .LIST => try p.analyzeList(n),
-                .ITEM => try p.analyzeItem(n),
-                .CODE_BLOCK => try p.analyzeCodeBlock(n),
-                .HTML_BLOCK => try p.addError(n.range(), .inline_html),
-                .CUSTOM_BLOCK => try p.analyzeCustomBlock(n),
-                .PARAGRAPH => try p.analyzeParagraph(n),
-                .HEADING => try p.analyzeHeading(n),
-                .FOOTNOTE_REFERENCE => try p.analyzeFootnoteReference(n),
-                .IMAGE => {
-                    const src = n.link() orelse return;
-                    switch (src[0]) {
-                        '$' => {
-                            try p.addError(n.range(), .expression_in_image_syntax);
-                            continue;
-                        },
-                        '/' => {
-                            var d: Directive = .{
-                                .kind = .{
-                                    .image = .{
-                                        .src = .{ .site_asset = .{ .ref = src[1..] } },
-                                        .alt = n.title(),
-                                    },
-                                },
-                            };
-                            _ = try n.setDirective(p.gpa, &d, true);
-                        },
-                        else => {
-                            if (std.mem.indexOf(u8, src, "://") != null) {
-                                _ = std.Uri.parse(src) catch {
-                                    try p.addError(n.range(), .{
-                                        .scripty = .{
-                                            .len = @intCast(src.len),
-                                            .span = .{
-                                                .start = 0,
-                                                .end = @intCast(src.len),
-                                            },
-                                            .err = "invalid URL",
-                                        },
-                                    });
-                                    continue;
-                                };
-                                var d: Directive = .{
-                                    .kind = .{
-                                        .image = .{
-                                            .src = .{ .url = src },
-                                            .alt = n.title(),
-                                        },
-                                    },
-                                };
-                                _ = try n.setDirective(p.gpa, &d, true);
-                                return;
-                            }
-
-                            const clean_src = if (std.mem.startsWith(u8, src, "./")) src[2..] else src;
-                            var d: Directive = .{
-                                .kind = .{
-                                    .image = .{
-                                        .src = .{ .page_asset = .{ .ref = clean_src } },
-                                        .alt = n.title(),
-                                    },
-                                },
-                            };
-                            _ = try n.setDirective(p.gpa, &d, true);
-                        },
-                    }
-                },
-                .LINK => {
-                    const src = n.link() orelse continue;
-                    const directive = try p.runScript(n, src) orelse continue;
-                    switch (directive.kind) {
-                        else => {
-                            if (directive.id) |id| try p.addId(id, n);
-                        },
-                        .mathtex => {
-                            current = n.nextSibling();
-                        },
-                        .section, .heading => {
-                            if (directive.kind == .section) {
-                                p.sectioned = true;
-                            }
-                            const parent = n.parent().?;
-                            _ = try parent.setDirective(p.gpa, directive, false);
-
-                            if (directive.id) |id| try p.addId(id, parent);
-                        },
-                    }
-                },
-                else => if (@intFromEnum(kind) == c.CMARK_NODE_TABLE) {
-                    try p.analyzeTable(n);
-                } else continue,
-            }
+        var child = footnote.firstChild();
+        while (child) |n| : (child = n.nextSibling()) {
+            try p.analyzeNode(n);
         }
     }
 

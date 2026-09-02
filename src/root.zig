@@ -25,23 +25,28 @@ pub const Range = struct {
     pub fn span(r: Range, src: []const u8) Span {
         const std = @import("std");
 
-        var start: usize = r.start.col;
+        var start: usize = r.start.col - 1;
         var it = std.mem.splitScalar(u8, src, '\n');
         for (1..r.start.row) |_| {
             const line = it.next() orelse "";
             start += line.len + 1;
         }
 
-        var end = start + r.end.col;
+        var end = start + r.end.col - 1;
         for (r.start.row..r.end.row) |_| {
             const line = it.next() orelse "";
             end += line.len + 1;
         }
 
         const loc: Span = .{
-            .start = @intCast(start - 1),
-            .end = @intCast(end - 1),
+            .start = @intCast(start),
+            .end = @intCast(end),
         };
+
+        const assert = @import("std").debug.assert;
+        assert(loc.start < src.len);
+        assert(loc.end <= src.len);
+
         return loc;
     }
 };
